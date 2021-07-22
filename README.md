@@ -1,0 +1,2 @@
+# ElectronScreenshot
+基于ElectronJS的截屏软件
