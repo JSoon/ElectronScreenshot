@@ -1,13 +1,19 @@
 // Modules to control application life and create native browser window
 const { app, BrowserWindow } = require('electron')
 const path = require('path')
+const { useCapture } = require('./screenshot')
 
 function createWindow () {
+  useCapture()
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
       // Attach a preload script to the renderer, which runs before the renderer 
       // process is loaded, and has access to both renderer globals (e.g. window
       // and document) and a Node.js environment.
