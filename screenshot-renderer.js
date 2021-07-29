@@ -1,17 +1,30 @@
 // In the renderer process.
-const { desktopCapturer } = require('electron')
-const { getCurrentScreen } = require('./utils')
+const { desktopCapturer, ipcRenderer } = require('electron')
+const { IPC_CHANNELS } = require('./ipcEnums')
 
-const curScreen = getCurrentScreen()
+let screen = {}
+
+ipcRenderer.send(IPC_CHANNELS.GET_CURRENT_SCREEN)
+ipcRenderer.on(IPC_CHANNELS.GET_CURRENT_SCREEN, (e, currentScreen) => {
+  console.log(currentScreen);
+
+  screen = currentScreen
+
+  getScreen((img) => {
+    console.log(img)
+    window.open(img, '_blank')
+  })
+})
 
 function getScreen(callback) {
-  this.callback = callback
 
   document.body.style.opacity = '0'
   let oldCursor = document.body.style.cursor
   document.body.style.cursor = 'none'
 
-  this.handleStream = (stream) => {
+  // TODO: 截图视频流, 鼠标无法隐藏
+  // https://github.com/electron/electron/issues/7584
+  const handleStream = (stream) => {
       document.body.style.cursor = oldCursor
       document.body.style.opacity = '1'
       // Create hidden video tag
@@ -25,6 +38,8 @@ function getScreen(callback) {
               return
           }
           loaded = true
+          video.pause()
+
           // Set video ORIGINAL height (screenshot)
           video.style.height = video.videoHeight + 'px' // videoHeight
           video.style.width = video.videoWidth + 'px' // videoWidth
@@ -37,9 +52,9 @@ function getScreen(callback) {
           // Draw video on canvas
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-          if (this.callback) {
+          if (callback) {
               // Save screenshot to png - base64
-              this.callback(canvas.toDataURL('image/png'))
+              callback(canvas.toDataURL('image/png'))
           } else {
               // console.log('Need callback!')
           }
@@ -53,52 +68,76 @@ function getScreen(callback) {
           }
       }
       video.srcObject = stream
+      // fix: 截屏流转图片黑屏
+      // https://github.com/electron/electron/issues/21063
+      video.play()
       document.body.appendChild(video)
   }
 
-  this.handleError = (e) => {
-      // console.log(e)
+  const handleError = (e) => {
+    console.log(e)
   }
 
-  if (require('os').platform() === 'win32') {
-      desktopCapturer.getSources({
-          types: ['screen'],
-          thumbnailSize: { width: 1, height: 1 },
-      }).then(sources => {
-          let selectSource = sources.filter(source => source.display_id + '' === curScreen.id + '')[0]
-          navigator.getUserMedia({
-              audio: false,
-              video: {
-                  mandatory: {
-                      chromeMediaSource: 'desktop',
-                      chromeMediaSourceId: selectSource.id + '',
-                      minWidth: 1280,
-                      minHeight: 720,
-                      maxWidth: 8000,
-                      maxHeight: 8000,
-                  },
-              },
-          }, (e) => {
-              this.handleStream(e)
-          }, this.handleError)
-      })
-  } else {
-    navigator.getUserMedia({
+  desktopCapturer.getSources({
+    types: ['screen'],
+    thumbnailSize: { width: 1, height: 1 },
+  }).then(async sources => {
+    let selectSource = sources.filter(source => source.display_id + '' === screen.id + '')[0]
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
-            mandatory: {
-                chromeMediaSource: 'desktop',
-                chromeMediaSourceId: `screen:${curScreen.id}`,
-                minWidth: 1280,
-                minHeight: 720,
-                maxWidth: 8000,
-                maxHeight: 8000,
-            },
-        },
-    }, (e) => {
-        this.handleStream(e)
-    }, this.handleError)
-  }
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: selectSource.id,
+            minWidth: 1280,
+            maxWidth: 8000,
+            minHeight: 720,
+            maxHeight: 8000
+          }
+        }
+      })
+      handleStream(stream)
+    }
+    catch (e) {
+      handleError(e)
+    }
+    // // Windows
+    // if (require('os').platform() === 'win32') {
+    //   navigator.mediaDevices.getUserMedia({
+    //       audio: false,
+    //       video: {
+    //           mandatory: {
+    //               chromeMediaSource: 'desktop',
+    //               chromeMediaSourceId: selectSource.id + '',
+    //               minWidth: 1280,
+    //               minHeight: 720,
+    //               maxWidth: 8000,
+    //               maxHeight: 8000,
+    //           },
+    //       },
+    //   }, (e) => {
+    //     handleStream(e)
+    //   }, handleError)
+    // }
+    // // Mac OS X
+    // else {
+    //   navigator.mediaDevices.getUserMedia({
+    //       audio: false,
+    //       video: {
+    //           mandatory: {
+    //               chromeMediaSource: 'desktop',
+    //               chromeMediaSourceId: `screen:${screen.id}`,
+    //               minWidth: 1280,
+    //               minHeight: 720,
+    //               maxWidth: 8000,
+    //               maxHeight: 8000,
+    //           },
+    //       },
+    //   }, (e) => {
+    //     handleStream(e)
+    //   }, handleError)
+    // }
+  })
 }
-
-// getScreen((img) => console.log(img))

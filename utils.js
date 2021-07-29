@@ -1,14 +1,14 @@
-const { remote } = require('electron')
+const electron = require('electron')
 
-let currentWindow = remote.getCurrentWindow()
-
-exports.getCurrentScreen = () => {
+// 当前屏幕
+exports.getCurrentScreen = (currentWindow) => {
     let { x, y } = currentWindow.getBounds()
-    return remote.screen.getAllDisplays().filter(d => d.bounds.x === x && d.bounds.y === y)[0]
+    return electron.screen.getAllDisplays().filter(d => d.bounds.x === x && d.bounds.y === y)[0]
 }
 
-exports.isCursorInCurrentWindow = () => {
-    let { x, y } = remote.screen.getCursorScreenPoint()
+// 鼠标是否在当前窗口
+exports.isCursorInCurrentWindow = (currentWindow) => {
+    let { x, y } = electron.screen.getCursorScreenPoint()
     let {
         x: winX, y: winY, width, height,
     } = currentWindow.getBounds()

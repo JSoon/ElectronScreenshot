@@ -1,5 +1,7 @@
+const os = require('os')
 const { BrowserWindow, ipcMain } = require('electron')
-const path = require('path')
+const { getCurrentScreen } = require('./utils')
+const { IPC_CHANNELS } = require('./ipcEnums')
 
 class Screenshot {
 
@@ -8,13 +10,14 @@ class Screenshot {
   init() {
     this.win = new BrowserWindow({
       fullscreen: true,
+      simpleFullscreen: true,
       frame: false,
       movable: false,
       resizable: false,
       enableLargerThanScreen: true,
       hasShadow: false,
       transparent: true,
-      opacity: 0.5,
+      // opacity: 0,
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
@@ -30,11 +33,20 @@ class Screenshot {
 }
 
 const useCapture = () => {
-  ipcMain.on('take-screenshot', (e, { type = 'start', screenId } = {}) => {
-    const ss = new Screenshot()
+  let ss = null
+
+  ipcMain.on(IPC_CHANNELS.TAKE_SCREENSHOT, (e, { type = 'start', screenId } = {}) => {
+    ss = new Screenshot()
     ss.init().show()
   })
+  
+  ipcMain.on(IPC_CHANNELS.GET_CURRENT_SCREEN, () => {
+    const currentScreen = getCurrentScreen(ss.win)
+    ss.win.webContents.send(IPC_CHANNELS.GET_CURRENT_SCREEN, currentScreen)
+  })
 }
+
+
 
 module.exports = {
   useCapture
