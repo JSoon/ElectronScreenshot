@@ -10,6 +10,21 @@ const isWindows = os.platform() === 'win32'
 // 是否是Mac
 const isMacOS = os.platform() === 'darwin'
 
+// 获取当前窗口
+const getCurrentWindow = () => {
+  return BrowserWindow.getFocusedWindow()
+}
+
+// 隐藏当前窗口
+const hideCurrentWindow = () => {
+  BrowserWindow.getFocusedWindow().hide()
+}
+
+// 关闭当前窗口
+const closeCurrentWindow = () => {
+  BrowserWindow.getFocusedWindow().close()
+}
+
 // 获取当前屏幕
 const getCurrentScreen = () => {
   const currentWindow = BrowserWindow.getFocusedWindow()
@@ -30,6 +45,9 @@ const isCursorInCurrentWindow = () => {
 module.exports = {
   isWindows,
   isMacOS,
+  hideCurrentWindow,
+  closeCurrentWindow,
+  getCurrentWindow,
   getCurrentScreen,
   isCursorInCurrentWindow
 }

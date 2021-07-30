@@ -25,13 +25,21 @@
       width: 100%;
       height: 100%;
     }
+
+    .selection-canvas {
+      position: absolute;
+      display: none;
+      z-index: 1;
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- 截屏背景图 -->
+  <!-- 截屏底图 -->
   <div id="J_Background" class="bg"></div>
+  <!-- 选区画布 -->
+  <canvas id="J_SelectionCanvas" class="selection-canvas"></canvas>
 
   <script src="./screenshot-renderer.js"></script>
 </body>

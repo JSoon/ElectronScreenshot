@@ -4,7 +4,7 @@
 const { app, BrowserWindow, ipcMain, screen } = require('electron')
 const path = require('path')
 const { IPC_CHANNELS } = require('./enums')
-const { getCurrentScreen, isMacOS } = require('./utils-main')
+const { getCurrentWindow, getCurrentScreen, isMacOS, hideCurrentWindow, closeCurrentWindow } = require('./utils-main')
 
 // 所有截屏窗口
 let screenshotWins = []
@@ -95,10 +95,26 @@ const useCapture = () => {
 
   })
 
+  // 获取当前窗口
+  ipcMain.handle(IPC_CHANNELS.GET_CURRENT_WINDOW, () => {
+    return getCurrentWindow()
+  })
+
+  // 隐藏当前窗口
+  ipcMain.on(IPC_CHANNELS.HIDE_CURRENT_WINDOW, () => {
+    return hideCurrentWindow()
+  })
+
+  // 关闭当前窗口
+  ipcMain.on(IPC_CHANNELS.CLOSE_CURRENT_WINDOW, () => {
+    return closeCurrentWindow()
+  })
+
   // 获取当前屏幕
   ipcMain.handle(IPC_CHANNELS.GET_CURRENT_SCREEN, () => {
     return getCurrentScreen()
   })
+
 }
 
 
