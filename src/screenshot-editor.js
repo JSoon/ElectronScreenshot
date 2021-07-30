@@ -372,11 +372,12 @@ class CaptureEditor extends Event {
     const {
       x, y, w, h,
     } = this.selectRect
+    // debugger
     if (w && h) {
       let imageData = this.bgCtx.getImageData(x * scaleFactor, y * scaleFactor, w * scaleFactor, h * scaleFactor)
       let canvas = document.createElement('canvas')
-      canvas.width = w
-      canvas.height = h
+      canvas.width = w * scaleFactor
+      canvas.height = h * scaleFactor
       let ctx = canvas.getContext('2d')
       ctx.putImageData(imageData, 0, 0)
       return canvas.toDataURL()
