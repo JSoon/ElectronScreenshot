@@ -1,13 +1,19 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
-const { useCapture } = require('./screenshot')
+const { useCapture } = require('./src/screenshot-main')
+const { isMacOS } = require('./src/utils-main')
+
+let mainWindow = null
 
 function createWindow () {
-  useCapture()
+  if (mainWindow) {
+    mainWindow.focus()
+    return
+  }
 
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -17,15 +23,18 @@ function createWindow () {
       // Attach a preload script to the renderer, which runs before the renderer 
       // process is loaded, and has access to both renderer globals (e.g. window
       // and document) and a Node.js environment.
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'src', 'index-preload.js')
     }
   })
 
   // and load the index.html of the app.
-  mainWindow.loadFile('index.html')
+  mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'))
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools()
+
+  // 引入截屏功能
+  useCapture()
 }
 
 // This method will be called when Electron has finished
@@ -45,8 +54,14 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit()
+  if (isMacOS) app.quit()
 })
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+
+
+
+
+module.exports = mainWindow
