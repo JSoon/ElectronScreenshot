@@ -18,9 +18,13 @@ const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas')
 const J_SelectionInfo = document.querySelector('#J_SelectionInfo')
 // 选区工具条
 const J_SelectionToolbar = document.querySelector('#J_SelectionToolbar')
+const J_SelectionReset = document.querySelector('#J_SelectionReset')
+const J_SelectionDownload = document.querySelector('#J_SelectionDownload')
+const J_SelectionCancel = document.querySelector('#J_SelectionCancel')
+const J_SelectionConfirm = document.querySelector('#J_SelectionConfirm')
 
 // 右键取消截屏
-document.body.addEventListener('mousedown', (e) => {
+document.body.addEventListener('mousedown', e => {
   if (e.button === 2) {
     window.close()
   }
@@ -62,7 +66,7 @@ getScreenshot(async (imgSrc) => {
   const onDragEnd = () => {
     if (capture.selectRect) {
       ipcRenderer.send(IPC_CHANNELS.SCREENSHOT, {
-        type: 'select',
+        type: IPC_CHANNELS.SCREENSHOT_SELECT,
         screenId: currentScreen.id,
       })
       const {
@@ -88,41 +92,74 @@ getScreenshot(async (imgSrc) => {
     }
   })
 
-  // 重置选区, 隐藏选区相关信息
-  capture.on(EDITOR_EVENTS.RESET, () => {
+  // 选区重置
+  capture.on(EDITOR_EVENTS.RESET, e => {
+    // 隐藏选区相关信息
     J_SelectionInfo.style.display = 'none'
     J_SelectionToolbar.style.display = 'none'
   })
 
-  // 拖动鼠标, 进行选区截图
-  const selectCapture = () => {
+  // 选区截屏
+  const selectionCapture = () => {
     if (!capture.selectRect) {
       return
     }
     let url = capture.getImageUrl()
+    // 1. 隐藏截屏窗口
     ipcRenderer.send(IPC_CHANNELS.HIDE_CURRENT_WINDOW)
 
+    // 2. 播放截屏音
     audio.play()
     audio.onended = () => {
+      // 3. 截屏音播放完成后, 再关闭截屏窗口
       window.close()
     }
+    // 4. 写入图片到剪切板
     clipboard.writeImage(nativeImage.createFromDataURL(url))
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT, {
-      type: 'complete',
+      type: IPC_CHANNELS.SCREENSHOT_COMPLETE,
       url,
     })
   }
 
-  // 双击选区, 保存截图到剪切板
+  // 双击选区, 保存截屏到剪切板
   J_SelectionCanvas.addEventListener('dblclick', e => {
-    selectCapture()
-  }, false)
+    selectionCapture()
+  })
 
-  // 点击回车, 保存截图到剪切板
-  window.addEventListener('keypress', (e) => {
+  // 点击回车, 保存截屏到剪切板
+  window.addEventListener('keypress', e => {
     if (e.code === 'Enter') {
-      selectCapture()
+      selectionCapture()
     }
   })
+
+  //#region 截屏工具条
+  // 1. 选区重置
+  J_SelectionReset.addEventListener('click', e => {
+    capture.reset()
+  })
+
+  // 2. 截屏下载
+  J_SelectionDownload.addEventListener('click', async e => {
+    let dataURL = capture.getImageUrl() // base64 image
+    
+    // 保存截屏图片
+    ipcRenderer.send(IPC_CHANNELS.SAVE_SCREENSHOT_FILE, dataURL)
+  })
+
+  // 3. 截屏取消
+  J_SelectionCancel.addEventListener('click', e => {
+    ipcRenderer.send(IPC_CHANNELS.SCREENSHOT, {
+      type: IPC_CHANNELS.SCREENSHOT_CANCEL
+    })
+    window.close()
+  })
+
+  // 4. 复制到剪切板
+  J_SelectionConfirm.addEventListener('click', e => {
+    selectionCapture()
+  })
+  //#endregion
 
 })

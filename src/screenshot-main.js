@@ -1,8 +1,16 @@
 /**
  * 截屏主进程
  */
-const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron')
 const path = require('path')
+const fs = require('fs')
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  screen,
+  globalShortcut,
+  dialog
+} = require('electron')
 const { IPC_CHANNELS } = require('./enums')
 const { getCurrentWindow, getCurrentScreen, isMacOS, hideCurrentWindow, closeCurrentWindow } = require('./utils-main')
 
@@ -30,7 +38,7 @@ class Screenshot {
         enableLargerThanScreen: true,
         hasShadow: false,
         transparent: true,
-        opacity: 0.7,
+        // opacity: 0.7,
         webPreferences: {
           nodeIntegration: true,
           contextIsolation: false,
@@ -96,20 +104,72 @@ const useCapture = () => {
   //#endregion
 
   // 截屏
-  ipcMain.on(IPC_CHANNELS.SCREENSHOT, (e, { type = 'start', screenId } = {}) => {
+  ipcMain.on(IPC_CHANNELS.SCREENSHOT, (e, {
+    type = IPC_CHANNELS.SCREENSHOT_START,
+    screenId
+  } = {}) => {
     // 截屏开始
-    if (type === 'start') {
+    if (type === IPC_CHANNELS.SCREENSHOT_START) {
       screenShot.init()
+      console.log('截屏开始');
     }
     // 截屏完成
-    else if (type === 'complete') {
-      // nothing
+    else if (type === IPC_CHANNELS.SCREENSHOT_COMPLETE) {
+      // TODO
+      console.log('截屏完成');
     }
     // 截屏选区选择
-    else if (type === 'select') {
-      screenshotWins.forEach(win => win.webContents.send(IPC_CHANNELS.SCREENSHOT, { type: 'select', screenId }))
+    else if (type === IPC_CHANNELS.SCREENSHOT_SELECT) {
+      screenshotWins.forEach(win => {
+        win.webContents.send(IPC_CHANNELS.SCREENSHOT, {
+          type: IPC_CHANNELS.SCREENSHOT_SELECT, screenId
+        })
+      })
+      console.log('截屏选区选择');
+    }
+    // 截屏取消
+    else if (type === IPC_CHANNELS.SCREENSHOT_CANCEL) {
+      // TODO
+      console.log('截屏取消');
     }
 
+  })
+
+  // 保存截屏图片文件
+  ipcMain.on(IPC_CHANNELS.SAVE_SCREENSHOT_FILE, async (e, dataURL) => {
+    const win = getCurrentWindow()
+    // 隐藏截屏窗口
+    win.hide()
+    
+    try {
+      const { filePath, canceled } = await dialog.showSaveDialog({
+        filters: [{
+          name: 'Images',
+          extensions: ['png', 'jpg', 'gif'],
+        }],
+      })
+
+      // 取消保存操作
+      if (canceled) {
+        console.log('截屏取消');
+        win.close()
+        return
+      }
+
+      // 若文件保存路径存在, 则进行写入
+      if (filePath) {
+        fs.writeFile(
+          filePath,
+          Buffer.from(dataURL.replace('data:image/png;base64,', ''), 'base64'),
+          () => {
+            console.log('截屏完成');
+            win.close()
+          }
+        )
+      }
+    } catch (error) {
+      dialog.showErrorBox('图片保存出错', error.message)
+    }
   })
 
   // 获取当前窗口

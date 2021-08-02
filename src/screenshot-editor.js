@@ -22,18 +22,19 @@ const ANCHORS = [
 ]
 
 const EDITOR_EVENTS = {
-  // 移动选区
+  // 选区拖拽开始
   DRAGGING_START: 'start-dragging',
+  // 选区拖拽中
   DRAGGING: 'dragging',
-  // 移动鼠标
-  MOVING: 'moving',
-  // 移动鼠标结束
-  MOVING_END: 'end-moving',
-  // 松开鼠标
-  MOUSE_UP: 'mouse-up',
-  // 移动选区结束
+  // 选区拖拽结束
   DRAGGING_END: 'end-dragging',
-  // 重置选区
+  // 鼠标移动中
+  MOVING: 'moving',
+  // 鼠标移动结束
+  MOVING_END: 'end-moving',
+  // 鼠标松开
+  MOUSE_UP: 'mouse-up',
+  // 选区重置
   RESET: 'reset'
 }
 
@@ -95,7 +96,7 @@ class ScreenshotEditor extends Event {
       const {
         w, h, x, y, r, b,
       } = this.selectRect
-      // 若选择锚点存在, 则为调整选区大小操作
+      // 若点击的是选区锚点, 则为选区大小调整操作
       if (this.selectAnchorIndex !== -1) {
         this.startPoint = {
           x: pageX,
@@ -116,6 +117,7 @@ class ScreenshotEditor extends Event {
         y: e.pageY,
         moved: false,
       }
+      // 若点击的是选区内部, 则为选区移动操作
       if (pageX > x && pageX < r && pageY > y && pageY < b) {
         this.action = MOVING_RECT
         this.startDragRect = {
@@ -125,11 +127,13 @@ class ScreenshotEditor extends Event {
             x, y, w, h, r, b,
           },
         }
-      } else {
+      } 
+      // 否则, 为选区创建操作
+      else {
         this.action = CREATE_RECT
       }
     } 
-    // 若选区不存在, 则为创建选区操作
+    // 若选区不存在, 则为选区创建操作
     else {
       this.action = CREATE_RECT
       this.startPoint = {
@@ -165,7 +169,6 @@ class ScreenshotEditor extends Event {
 
     // 选区移动
     if (this.action === MOVING_RECT) {
-      // 移动选区
       if (startDragging) {
         this.emit(EDITOR_EVENTS.DRAGGING_START, selectRect)
       }
@@ -231,9 +234,8 @@ class ScreenshotEditor extends Event {
       }
       this.drawRect()
     } 
-    // 创建选区
+    // 选区创建
     else {
-      // 生成选区
       const { pageX, pageY } = e
       let x, y, w, h, r, b
       if (this.startPoint.x > pageX) {

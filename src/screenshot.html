@@ -17,6 +17,7 @@
       margin: 0;
       padding: 0;
       font-family: PingFang SC, Lantinghei SC, Helvetica Neue, Helvetica, Arial, Microsoft YaHei, 微软雅黑, STHeitiSC-Light, simsun, 宋体, WenQuanYi Zen Hei, WenQuanYi Micro Hei, "sans-serif";
+      overflow: hidden;
     }
 
     .bg {
@@ -46,12 +47,29 @@
       position: absolute;
       color: #ffffff;
       font-size: 12px;
-      background: rgba(40, 40, 40, 0.8);
+      background: rgba(0, 0, 0, 0.8);
       padding: 5px 10px;
       border-radius: 2px;
-      font-family: Arial Consolas sans-serif;
       display: none;
       z-index: 2;
+    }
+
+    .selection-toolbar {
+      position: absolute;
+      color: #343434;
+      font-size: 12px;
+      background: #f5f5f5;
+      padding: 5px 10px;
+      border-radius: 4px;
+      display: none;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+      z-index: 2;
+      align-items: center;
+    }
+
+    .selection-toolbar .selection-toolbar-item {
+      padding: 2px 5px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -67,7 +85,16 @@
   <!-- 选区信息 -->
   <div id="J_SelectionInfo" class="selection-info"></div>
   <!-- 选区工具条 -->
-  <div id="J_SelectionToolbar" class="selection-toolbar"></div>
+  <div id="J_SelectionToolbar" class="selection-toolbar">
+    <!-- 选区重置 -->
+    <div id="J_SelectionReset" class="selection-toolbar-item">重置</div>
+    <!-- 截图下载 -->
+    <div id="J_SelectionDownload" class="selection-toolbar-item">下载</div>
+    <!-- 取消 -->
+    <div id="J_SelectionCancel" class="selection-toolbar-item">取消</div>
+    <!-- 复制到剪切板 -->
+    <div id="J_SelectionConfirm" class="selection-toolbar-item">确定</div>
+  </div>
 
 
   <script src="./screenshot-renderer.js"></script>

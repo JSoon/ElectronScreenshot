@@ -2,6 +2,12 @@
 const IPC_CHANNELS = {
   // 截屏
   SCREENSHOT: 'screenshot',
+  SCREENSHOT_START: 'screenshot-start',
+  SCREENSHOT_SELECT: 'screenshot-select',
+  SCREENSHOT_COMPLETE: 'screenshot-complete',
+  SCREENSHOT_CANCEL: 'screenshot-cancel',
+  // 保存截屏图片文件
+  SAVE_SCREENSHOT_FILE: 'save-screenshot-file',
   // 获取当前窗口
   GET_CURRENT_WINDOW: 'get-current-window',
   // 获取当前屏幕
