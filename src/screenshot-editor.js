@@ -1,5 +1,5 @@
 /**
- * 截屏编辑渲染进程
+ * 截屏编辑器
  */
 
 const Event = require('events')
@@ -21,7 +21,23 @@ const ANCHORS = [
   { row: 'r', col: 'b', cursor: 'nwse-resize' },
 ]
 
-class CaptureEditor extends Event {
+const EDITOR_EVENTS = {
+  // 移动选区
+  DRAGGING_START: 'start-dragging',
+  DRAGGING: 'dragging',
+  // 移动鼠标
+  MOVING: 'moving',
+  // 移动鼠标结束
+  MOVING_END: 'end-moving',
+  // 松开鼠标
+  MOUSE_UP: 'mouse-up',
+  // 移动选区结束
+  DRAGGING_END: 'end-dragging',
+  // 重置选区
+  RESET: 'reset'
+}
+
+class ScreenshotEditor extends Event {
 
   constructor(currentScreen, $canvas, $bg, imageSrc) {
     super()
@@ -74,10 +90,12 @@ class CaptureEditor extends Event {
     }
     this.mouseDown = true
     const { pageX, pageY } = e
+    // 若选区存在
     if (this.selectRect) {
       const {
         w, h, x, y, r, b,
       } = this.selectRect
+      // 若选择锚点存在, 则为调整选区大小操作
       if (this.selectAnchorIndex !== -1) {
         this.startPoint = {
           x: pageX,
@@ -110,7 +128,9 @@ class CaptureEditor extends Event {
       } else {
         this.action = CREATE_RECT
       }
-    } else {
+    } 
+    // 若选区不存在, 则为创建选区操作
+    else {
       this.action = CREATE_RECT
       this.startPoint = {
         x: e.pageX,
@@ -132,6 +152,7 @@ class CaptureEditor extends Event {
     const { pageX, pageY } = e
     let startDragging
     let selectRect = this.selectRect
+    // 初始化选区拖拽开始标识
     if (!this.startPoint.moved) {
       if (Math.abs(this.startPoint.x - pageX) > 10 || Math.abs(this.startPoint.y - pageY) > 10) {
         this.startPoint.moved = true
@@ -142,12 +163,13 @@ class CaptureEditor extends Event {
       return
     }
 
+    // 选区移动
     if (this.action === MOVING_RECT) {
       // 移动选区
       if (startDragging) {
-        this.emit('start-dragging', selectRect)
+        this.emit(EDITOR_EVENTS.DRAGGING_START, selectRect)
       }
-      this.emit('dragging', selectRect)
+      this.emit(EDITOR_EVENTS.DRAGGING, selectRect)
       const { w, h } = selectRect
       const { x: startX, y: startY } = this.startPoint
       let newX = this.startDragRect.selectRect.x + pageX - startX
@@ -177,8 +199,10 @@ class CaptureEditor extends Event {
         b: newB,
       }
       this.drawRect()
-    } else if (this.action === RESIZE) {
-      this.emit('dragging', selectRect)
+    } 
+    // 选区大小调整
+    else if (this.action === RESIZE) {
+      this.emit(EDITOR_EVENTS.DRAGGING, selectRect)
       let { row, col } = ANCHORS[this.selectAnchorIndex]
       if (row) {
         this.startPoint.rawRect[row] = this.startPoint.selectRect[row] + pageX - this.startPoint.x
@@ -206,7 +230,9 @@ class CaptureEditor extends Event {
         this.startPoint.rawRect.h = selectRect.h
       }
       this.drawRect()
-    } else {
+    } 
+    // 创建选区
+    else {
       // 生成选区
       const { pageX, pageY } = e
       let x, y, w, h, r, b
@@ -233,9 +259,9 @@ class CaptureEditor extends Event {
       }
       selectRect = this.selectRect
       if (startDragging) {
-        this.emit('start-dragging', selectRect)
+        this.emit(EDITOR_EVENTS.DRAGGING_START, selectRect)
       }
-      this.emit('dragging', selectRect)
+      this.emit(EDITOR_EVENTS.DRAGGING, selectRect)
       this.drawRect(x, y, w, h)
     }
 
@@ -255,8 +281,11 @@ class CaptureEditor extends Event {
     } = this.selectRect
 
     const scaleFactor = this.scaleFactor
-    let margin = 7
-    let radius = 5
+    // 选区锚点半径
+    let radius = 3
+    let lineWidth = 1
+    // 选区距锚点边距, 以保证锚点显示完全
+    let margin = radius + lineWidth
     this.$canvas.style.left = `${x - margin}px`
     this.$canvas.style.top = `${y - margin}px`
     this.$canvas.style.width = `${w + margin * 2}px`
@@ -270,8 +299,8 @@ class CaptureEditor extends Event {
       this.ctx.putImageData(imageData, margin * scaleFactor, margin * scaleFactor)
     }
     this.ctx.fillStyle = '#ffffff'
-    this.ctx.strokeStyle = '#67bade'
-    this.ctx.lineWidth = 2 * this.scaleFactor
+    this.ctx.strokeStyle = '#000000'
+    this.ctx.lineWidth = lineWidth * this.scaleFactor
 
     this.ctx.strokeRect(margin * scaleFactor, margin * scaleFactor, w * scaleFactor, h * scaleFactor)
     this.drawAnchors(w, h, margin, scaleFactor, radius)
@@ -335,7 +364,7 @@ class CaptureEditor extends Event {
       if (selectAnchor) {
         this.selectAnchorIndex = selectIndex
         document.body.style.cursor = ANCHORS[selectIndex].cursor
-        this.emit('moving')
+        this.emit(EDITOR_EVENTS.MOVING)
         return
       }
       if (pageX > x && pageX < r && pageY > y && pageY < b) {
@@ -343,7 +372,7 @@ class CaptureEditor extends Event {
       } else {
         document.body.style.cursor = 'auto'
       }
-      this.emit('moving')
+      this.emit(EDITOR_EVENTS.MOVING)
     }
   }
 
@@ -357,12 +386,12 @@ class CaptureEditor extends Event {
     this.mouseDown = false
     e.stopPropagation()
     e.preventDefault()
-    this.emit('mouse-up')
+    this.emit(EDITOR_EVENTS.MOUSE_UP)
     if (!this.startPoint.moved) {
-      this.emit('end-moving')
+      this.emit(EDITOR_EVENTS.MOVING_END)
       return
     }
-    this.emit('end-dragging')
+    this.emit(EDITOR_EVENTS.DRAGGING_END)
     this.drawRect()
     this.startPoint = null
   }
@@ -400,12 +429,13 @@ class CaptureEditor extends Event {
     this.startDragRect = null
     this.selectAnchorIndex = -1
     this.drawRect()
-    this.emit('reset')
+    this.emit(EDITOR_EVENTS.RESET)
   }
 }
 
 module.exports = {
-  CaptureEditor,
+  ScreenshotEditor,
+  EDITOR_EVENTS,
   CREATE_RECT,
   MOVING_RECT,
   RESIZE

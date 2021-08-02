@@ -1,7 +1,7 @@
 /**
  * 截屏主进程
  */
-const { app, BrowserWindow, ipcMain, screen } = require('electron')
+const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron')
 const path = require('path')
 const { IPC_CHANNELS } = require('./enums')
 const { getCurrentWindow, getCurrentScreen, isMacOS, hideCurrentWindow, closeCurrentWindow } = require('./utils-main')
@@ -82,15 +82,32 @@ class Screenshot {
 }
 
 const useCapture = () => {
+  const screenShot = new Screenshot()
+
+  //#region 注册全局快捷键
+  globalShortcut.register('Esc', () => {
+    if (screenshotWins?.length) {
+      screenshotWins.forEach(win => win.close())
+      screenshotWins = []
+    }
+  })
+
+  globalShortcut.register('CmdOrCtrl+Shift+A', screenShot.init)
+  //#endregion
 
   // 截屏
   ipcMain.on(IPC_CHANNELS.SCREENSHOT, (e, { type = 'start', screenId } = {}) => {
+    // 截屏开始
     if (type === 'start') {
-      new Screenshot().init()
-    } else if (type === 'complete') {
+      screenShot.init()
+    }
+    // 截屏完成
+    else if (type === 'complete') {
       // nothing
-    } else if (type === 'select') {
-      captureWins.forEach(win => win.webContents.send('capture-screen', { type: 'select', screenId }))
+    }
+    // 截屏选区选择
+    else if (type === 'select') {
+      screenshotWins.forEach(win => win.webContents.send(IPC_CHANNELS.SCREENSHOT, { type: 'select', screenId }))
     }
 
   })
