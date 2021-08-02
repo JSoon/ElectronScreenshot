@@ -9,7 +9,7 @@ const { ScreenshotEditor, EDITOR_EVENTS } = require('./screenshot-editor')
 
 // 截屏音
 const audio = new Audio()
-audio.src = path.join(__dirname, 'assets/audio/capture.mp3')
+audio.src = path.join(__dirname, 'assets/audio/screenshot.mp3')
 // 截屏底图
 const J_Background = document.querySelector('#J_Background')
 // 选区画布
@@ -143,7 +143,7 @@ getScreenshot(async (imgSrc) => {
   // 2. 截屏下载
   J_SelectionDownload.addEventListener('click', async e => {
     let dataURL = capture.getImageUrl() // base64 image
-    
+
     // 保存截屏图片
     ipcRenderer.send(IPC_CHANNELS.SAVE_SCREENSHOT_FILE, dataURL)
   })
