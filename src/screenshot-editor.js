@@ -1,5 +1,10 @@
 /**
  * 截屏编辑器
+ * 
+ * 参考文章
+ * @see {@link https://juejin.cn/post/6844903687706378247} 从零开始用 electron 手撸一个截屏工具
+ * @see {@link https://juejin.cn/post/6844903697705598983} Electron 截图踩坑和优化集合
+ * @see {@link https://juejin.cn/post/6982124234180919327} 基于 Electron 实现屏幕取色和截屏
  */
 
 const Event = require('events')

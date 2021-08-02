@@ -1,12 +1,12 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow } = require('electron')
 const path = require('path')
 const { useCapture } = require('./src/screenshot-main')
 const { isMacOS } = require('./src/utils-main')
 
 let mainWindow = null
 
-function createWindow () {
+function createWindow() {
   if (mainWindow) {
     mainWindow.focus()
     return
