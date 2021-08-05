@@ -151,9 +151,6 @@ getScreenshot(async (imgSrc) => {
 
   // 3. 截屏取消
   J_SelectionCancel.addEventListener('click', e => {
-    ipcRenderer.send(IPC_CHANNELS.SCREENSHOT, {
-      type: IPC_CHANNELS.SCREENSHOT_CANCEL
-    })
     window.close()
   })
 

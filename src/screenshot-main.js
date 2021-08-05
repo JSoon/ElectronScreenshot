@@ -24,6 +24,8 @@ class Screenshot {
       return
     }
 
+    console.log('截屏开始');
+
     // 获取屏幕上的所有可见显示
     let displays = screen.getAllDisplays()
 
@@ -78,10 +80,11 @@ class Screenshot {
           screenshotWins.splice(index, 1)
         }
         screenshotWins.forEach(win => win.close())
+        console.log('截屏取消');
       })
 
-      // 调试用
-      win.webContents.openDevTools()
+      // 调试
+      // win.webContents.openDevTools()
 
       return win
     })
@@ -104,7 +107,7 @@ const useCapture = (mainWindow) => {
     }
   })
   // 启动截屏
-  globalShortcut.register('CmdOrCtrl+Shift+A', screenShot.init)
+  globalShortcut.register('CommandOrControl+Shift+A', screenShot.init)
   //#endregion
 
   // 截屏事件
@@ -118,7 +121,6 @@ const useCapture = (mainWindow) => {
     // 截屏开始
     if (type === IPC_CHANNELS.SCREENSHOT_START) {
       screenShot.init()
-      console.log('截屏开始');
     }
     // 截屏完成
     else if (type === IPC_CHANNELS.SCREENSHOT_COMPLETE) {
@@ -144,8 +146,7 @@ const useCapture = (mainWindow) => {
     }
     // 截屏取消
     else if (type === IPC_CHANNELS.SCREENSHOT_CANCEL) {
-      console.log('截屏取消');
-
+      // nothing
     }
 
   })

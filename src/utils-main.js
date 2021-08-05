@@ -12,29 +12,30 @@ const isMacOS = os.platform() === 'darwin'
 
 // 获取当前窗口
 const getCurrentWindow = () => {
-  return BrowserWindow.getFocusedWindow()
+  // 若当前应用窗口不在焦点, 则直接获取主窗口
+  return BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0]
 }
 
 // 隐藏当前窗口
 const hideCurrentWindow = () => {
-  BrowserWindow.getFocusedWindow().hide()
+  getCurrentWindow().hide()
 }
 
 // 关闭当前窗口
 const closeCurrentWindow = () => {
-  BrowserWindow.getFocusedWindow().close()
+  getCurrentWindow().close()
 }
 
 // 获取当前屏幕
 const getCurrentScreen = () => {
-  const currentWindow = BrowserWindow.getFocusedWindow()
+  const currentWindow = getCurrentWindow()
   let { x, y } = currentWindow.getBounds()
-  return screen.getAllDisplays().filter(d => d.bounds.x === x && d.bounds.y === y)[0]
+  return screen.getAllDisplays()?.filter(d => d.bounds.x === x && d.bounds.y === y)?.[0]
 }
 
 // 鼠标是否在当前窗口
 const isCursorInCurrentWindow = () => {
-  const currentWindow = BrowserWindow.getFocusedWindow()
+  const currentWindow = getCurrentWindow()
   let { x, y } = screen.getCursorScreenPoint()
   let {
     x: winX, y: winY, width, height,
