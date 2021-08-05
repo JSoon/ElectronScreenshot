@@ -43,4 +43,5 @@ npm run start
 # Issues
 
 - [截图图片鼠标无法隐藏](https://github.com/electron/electron/issues/7584)
+- [Mac-10.13.6] 截屏窗口打开后, 由于是simpleFullscreen状态, 系统菜单栏会被隐藏, 退出截屏后仍然处于隐藏状态
 - 其他兼容性问题待测试
