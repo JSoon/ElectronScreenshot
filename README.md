@@ -2,6 +2,14 @@
 
 基于 [Electron](https://www.electronjs.org/) 开发的截屏软件
 
+# Runtime Environment
+
+```
+# Electron   13.1.7
+# Node       14.16.0
+# Chromium   91.0.4472.124
+```
+
 # Usage
 
 ```bash
