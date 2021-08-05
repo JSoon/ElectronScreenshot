@@ -34,7 +34,7 @@ function createWindow() {
   mainWindow.webContents.openDevTools()
 
   // 引入截屏功能
-  useCapture()
+  useCapture(mainWindow)
 }
 
 // This method will be called when Electron has finished

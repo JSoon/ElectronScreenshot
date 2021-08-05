@@ -85,7 +85,7 @@ getScreenshot(async (imgSrc) => {
 
   // 截屏选区选择, 若不是当前屏幕, 则禁止操作
   ipcRenderer.on(IPC_CHANNELS.SCREENSHOT, (e, { type, screenId }) => {
-    if (type === 'select') {
+    if (type === IPC_CHANNELS.SCREENSHOT_SELECT) {
       if (screenId && screenId !== currentScreen.id) {
         capture.disable()
       }
@@ -118,7 +118,8 @@ getScreenshot(async (imgSrc) => {
     clipboard.writeImage(nativeImage.createFromDataURL(url))
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT, {
       type: IPC_CHANNELS.SCREENSHOT_COMPLETE,
-      url,
+      screenId: currentScreen.id,
+      data,
     })
   }
 

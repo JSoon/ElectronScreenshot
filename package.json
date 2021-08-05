@@ -11,12 +11,18 @@
     "type": "git",
     "url": "git+https://github.com/JSoon/ElectronScreenshot.git"
   },
-  "author": "",
+  "author": {
+    "name": "J.Soon",
+    "email": "serdeemail@gmail.com"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/JSoon/ElectronScreenshot/issues"
   },
   "homepage": "https://github.com/JSoon/ElectronScreenshot#readme",
+  "engines": {
+    "node": "^12.22"
+  },
   "devDependencies": {
     "electron": "^13.1.7"
   }

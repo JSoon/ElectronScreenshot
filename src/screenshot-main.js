@@ -88,26 +88,33 @@ class Screenshot {
   }
 
 }
-
-const useCapture = () => {
+/**
+ * 使用截屏
+ * @param {BrowserWindow} mainWindow 程序主窗口
+ */
+const useCapture = (mainWindow) => {
   const screenShot = new Screenshot()
 
   //#region 注册全局快捷键
+  // 退出截屏
   globalShortcut.register('Esc', () => {
     if (screenshotWins?.length) {
       screenshotWins.forEach(win => win.close())
       screenshotWins = []
     }
   })
-
+  // 启动截屏
   globalShortcut.register('CmdOrCtrl+Shift+A', screenShot.init)
   //#endregion
 
-  // 截屏
+  // 截屏事件
   ipcMain.on(IPC_CHANNELS.SCREENSHOT, (e, {
     type = IPC_CHANNELS.SCREENSHOT_START,
-    screenId
+    screenId,
+    // 截屏图片DataURL数据(base64)
+    data
   } = {}) => {
+
     // 截屏开始
     if (type === IPC_CHANNELS.SCREENSHOT_START) {
       screenShot.init()
@@ -115,22 +122,30 @@ const useCapture = () => {
     }
     // 截屏完成
     else if (type === IPC_CHANNELS.SCREENSHOT_COMPLETE) {
-      // TODO
       console.log('截屏完成');
+      // TODO: 导入主窗口, 向主窗口发送截屏完成事件
+      if (mainWindow) {
+        mainWindow.webContents.send(IPC_CHANNELS.SCREENSHOT_COMPLETE, {
+          type: IPC_CHANNELS.SCREENSHOT_COMPLETE,
+          screenId,
+          data
+        })
+      }
     }
     // 截屏选区选择
     else if (type === IPC_CHANNELS.SCREENSHOT_SELECT) {
       screenshotWins.forEach(win => {
         win.webContents.send(IPC_CHANNELS.SCREENSHOT, {
-          type: IPC_CHANNELS.SCREENSHOT_SELECT, screenId
+          type: IPC_CHANNELS.SCREENSHOT_SELECT,
+          screenId
         })
       })
-      console.log('截屏选区选择');
+      console.log('截屏选区选择', screenId);
     }
     // 截屏取消
     else if (type === IPC_CHANNELS.SCREENSHOT_CANCEL) {
-      // TODO
       console.log('截屏取消');
+
     }
 
   })
