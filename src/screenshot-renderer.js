@@ -55,6 +55,7 @@ getScreenshot(async (imgSrc) => {
 
   const capture = new ScreenshotEditor(currentScreen, J_SelectionCanvas, J_Background, imgSrc)
   
+  //#region 移动鼠标, 显示鼠标处信息
   // 取色器
   const onColorPickHandler = e => {
     const { clientX, clientY } = e
@@ -109,11 +110,20 @@ getScreenshot(async (imgSrc) => {
     onManify(e)
   }
 
-  // 移动鼠标, 显示鼠标处信息
-  document.body.addEventListener('mousemove', onCursorInfoHandler)
+  // 事件绑定/解绑
+  const bindCursorInfoHandler = () => {
+    document.body.addEventListener('mousemove', onCursorInfoHandler)
+  }
+  const unbindCursorInfoHandler = () => {
+    J_CursorInfo.style.display = 'none'
+    document.body.removeEventListener('mousemove', onCursorInfoHandler)
+  }
+  bindCursorInfoHandler()
+  //#endregion
 
   //#region 拖动鼠标, 显示选区信息
   const onDrag = (selectRect) => {
+    unbindCursorInfoHandler()
     J_SelectionToolbar.style.display = 'none'
     J_SelectionInfo.style.display = 'block'
     J_SelectionInfo.innerText = `${selectRect.w} * ${selectRect.h}`
@@ -156,6 +166,7 @@ getScreenshot(async (imgSrc) => {
 
   // 选区重置
   capture.on(EDITOR_EVENTS.RESET, e => {
+    bindCursorInfoHandler()
     // 隐藏选区相关信息
     J_SelectionInfo.style.display = 'none'
     J_SelectionToolbar.style.display = 'none'
