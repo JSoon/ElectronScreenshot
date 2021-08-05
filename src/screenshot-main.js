@@ -167,7 +167,6 @@ const useCapture = (mainWindow) => {
 
       // 取消保存操作
       if (canceled) {
-        console.log('截屏取消');
         win.close()
         return
       }
