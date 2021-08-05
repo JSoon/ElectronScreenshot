@@ -5,6 +5,7 @@
  * @see {@link https://juejin.cn/post/6844903687706378247} 从零开始用 electron 手撸一个截屏工具
  * @see {@link https://juejin.cn/post/6844903697705598983} Electron 截图踩坑和优化集合
  * @see {@link https://juejin.cn/post/6982124234180919327} 基于 Electron 实现屏幕取色和截屏
+ * @see {@link https://zhuanlan.zhihu.com/p/121075555} 使用vue+electron实现一个桌面截图工具
  */
 
 const Event = require('events')
@@ -54,6 +55,9 @@ class ScreenshotEditor extends Event {
     this.screenWidth = currentScreen.bounds.width
     this.screenHeight = currentScreen.bounds.height
     this.$bg = $bg
+    // 截屏整图ctx
+    this.bgCtx = null
+    // 截屏选区ctx
     this.ctx = $canvas.getContext('2d')
 
     this.onMouseDown = this.onMouseDown.bind(this)

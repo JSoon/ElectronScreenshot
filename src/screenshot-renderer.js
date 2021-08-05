@@ -22,6 +22,10 @@ const J_SelectionReset = document.querySelector('#J_SelectionReset')
 const J_SelectionDownload = document.querySelector('#J_SelectionDownload')
 const J_SelectionCancel = document.querySelector('#J_SelectionCancel')
 const J_SelectionConfirm = document.querySelector('#J_SelectionConfirm')
+// 鼠标处信息
+const J_CursorInfo = document.querySelector('#J_CursorInfo')
+const J_CursorCoords = document.querySelector('#J_CursorCoords')
+const J_CursorColor = document.querySelector('#J_CursorColor')
 
 // 右键取消截屏
 document.body.addEventListener('mousedown', e => {
@@ -34,6 +38,7 @@ document.body.addEventListener('mousedown', e => {
 getScreenshot(async (imgSrc) => {
   // console.log(imgSrc);
   const currentScreen = await ipcRenderer.invoke(IPC_CHANNELS.GET_CURRENT_SCREEN)
+  const scaleFactor = currentScreen.scaleFactor
 
   // // 显示器像素缩放比例, 例如: 普通屏幕为1, 视网膜屏幕为2
   // const scaleFactor = currentScreen.scaleFactor
@@ -49,6 +54,63 @@ getScreenshot(async (imgSrc) => {
 
 
   const capture = new ScreenshotEditor(currentScreen, J_SelectionCanvas, J_Background, imgSrc)
+  
+  // 取色器
+  const onColorPickHandler = e => {
+    const { clientX, clientY } = e
+    const { data } = capture.bgCtx.getImageData(clientX * scaleFactor, clientY * scaleFactor, 1 * scaleFactor , 1 * scaleFactor)
+
+    if (!data) {
+      return
+    }
+
+    const [r, g, b, a] = data
+
+    // 设置样式
+    const offset = 20
+    let top = clientY - J_CursorInfo.clientHeight - offset
+    let left = clientX - J_CursorInfo.clientWidth - offset
+    if (top < 0) {
+      top = J_CursorInfo.clientHeight
+    }
+    if (left < 0) {
+      left = J_CursorInfo.clientWidth
+    }
+    J_CursorInfo.style.display = 'block'
+    J_CursorInfo.style.top = `${top}px`
+    J_CursorInfo.style.left = `${left}px`
+    
+    // 设置当前坐标
+    J_CursorCoords.innerHTML = `坐标: (${clientX}, ${clientY})`
+    // 设置当前颜色
+    J_CursorColor.innerHTML = `RGB: ${rgbToHex(r, g, b)}`
+  }
+
+  // 放大镜
+  const onManify = e => {
+    const { clientX, clientY } = e
+    const imageData = capture.bgCtx.getImageData(
+      clientX * scaleFactor - J_CursorInfo.clientWidth / 2,
+      clientY * scaleFactor - J_CursorInfo.clientHeight / 2,
+      J_CursorInfo.clientWidth * scaleFactor,
+      J_CursorInfo.clientHeight * scaleFactor
+    )
+    let canvas = document.createElement('canvas')
+    canvas.width = J_CursorInfo.clientWidth * scaleFactor
+    canvas.height = J_CursorInfo.clientHeight * scaleFactor
+    let ctx = canvas.getContext('2d')
+    ctx.putImageData(imageData, 0, 0)
+    J_CursorInfo.style.background = `url(${canvas.toDataURL()}) 0 0 transparent no-repeat`
+  }
+
+  // 鼠标处信息
+  const onCursorInfoHandler = e => {
+    onColorPickHandler(e)
+    onManify(e)
+  }
+
+  // 移动鼠标, 显示鼠标处信息
+  document.body.addEventListener('mousemove', onCursorInfoHandler)
 
   //#region 拖动鼠标, 显示选区信息
   const onDrag = (selectRect) => {
@@ -161,3 +223,14 @@ getScreenshot(async (imgSrc) => {
   //#endregion
 
 })
+
+//#region rgb to hex
+function componentToHex(c) {
+  var hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
+
+function rgbToHex(r, g, b) {
+  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+//#endregion
