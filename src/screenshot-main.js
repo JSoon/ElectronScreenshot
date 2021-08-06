@@ -69,7 +69,8 @@ class Screenshot {
         (y <= display.bounds.y + display.bounds.height)
       ) {
         win.focus()
-      } else {
+      } 
+      else {
         win.blur()
       }
 

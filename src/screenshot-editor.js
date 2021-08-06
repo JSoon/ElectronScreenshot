@@ -51,6 +51,7 @@ class ScreenshotEditor extends Event {
     this.$canvas = $canvas
     this.imageSrc = imageSrc
     this.disabled = false
+    // 显示器像素缩放比例, 例如: 普通屏幕为1, 视网膜屏幕为2
     this.scaleFactor = currentScreen.scaleFactor
     this.screenWidth = currentScreen.bounds.width
     this.screenHeight = currentScreen.bounds.height
@@ -246,24 +247,33 @@ class ScreenshotEditor extends Event {
     // 选区创建
     else {
       const { pageX, pageY } = e
-      let x, y, w, h, r, b
+      let x // 选区相对于文档的X坐标
+      let y // 选区相对于文档的Y坐标
+      let w // 选区宽度
+      let h // 选区高度
+      let r // 选区右边距离文档左边的偏移
+      let b // 选区底部距离文档顶部的偏移
+
+      // 始终将选区固定在开始坐标所在的屏幕范围
       if (this.startPoint.x > pageX) {
         x = pageX
         r = this.startPoint.x
-      } else {
+      } 
+      else {
         r = pageX
         x = this.startPoint.x
       }
       if (this.startPoint.y > pageY) {
         y = pageY
         b = this.startPoint.y
-      } else {
+      } 
+      else {
         b = pageY
         y = this.startPoint.y
       }
+
       w = r - x
       h = b - y
-
 
       this.selectRect = {
         x, y, w, h, r, b,

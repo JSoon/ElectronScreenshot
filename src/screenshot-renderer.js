@@ -40,26 +40,19 @@ getScreenshot(async (imgSrc) => {
   const currentScreen = await ipcRenderer.invoke(IPC_CHANNELS.GET_CURRENT_SCREEN)
   const scaleFactor = currentScreen.scaleFactor
 
-  // // 显示器像素缩放比例, 例如: 普通屏幕为1, 视网膜屏幕为2
-  // const scaleFactor = currentScreen.scaleFactor
-  // // 显示器宽度
-  // const screenWidth = currentScreen.bounds.width
-  // // 显示器高度
-  // const screenHeight = currentScreen.bounds.height
-
-  // console.log('scaleFactor', scaleFactor);
-
-  // J_Background.style.backgroundImage = `url(${imgSrc})`
-  // J_Background.style.backgroundSize = `${screenWidth}px ${screenHeight}px`
-
-
+  // 创建截屏编辑器
   const capture = new ScreenshotEditor(currentScreen, J_SelectionCanvas, J_Background, imgSrc)
   
   //#region 移动鼠标, 显示鼠标处信息
   // 取色器
   const onColorPickHandler = e => {
     const { clientX, clientY } = e
-    const { data } = capture.bgCtx.getImageData(clientX * scaleFactor, clientY * scaleFactor, 1 * scaleFactor , 1 * scaleFactor)
+    const { data } = capture.bgCtx?.getImageData(
+      clientX * scaleFactor, 
+      clientY * scaleFactor, 
+      1 * scaleFactor , 
+      1 * scaleFactor
+    )
 
     if (!data) {
       return
@@ -124,15 +117,20 @@ getScreenshot(async (imgSrc) => {
   //#region 拖动鼠标, 显示选区信息
   const onDrag = (selectRect) => {
     unbindCursorInfoHandler()
+    const offsetY = 10
     J_SelectionToolbar.style.display = 'none'
     J_SelectionInfo.style.display = 'block'
+    // 设置选区信息位置
+    const { width: screenWidth } = window.screen
     J_SelectionInfo.innerText = `${selectRect.w} * ${selectRect.h}`
-    if (selectRect.y > 35) {
-      J_SelectionInfo.style.top = `${selectRect.y - 30}px`
-    } else {
-      J_SelectionInfo.style.top = `${selectRect.y + 10}px`
-    }
     J_SelectionInfo.style.left = `${selectRect.x}px`
+    if (screenWidth - selectRect.r < J_SelectionInfo.clientWidth) {
+      J_SelectionInfo.style.left = `${screenWidth - J_SelectionInfo.clientWidth}px`
+    }
+    J_SelectionInfo.style.top = `${selectRect.y + offsetY}px`
+    if (selectRect.y > J_SelectionInfo.clientHeight + offsetY) {
+      J_SelectionInfo.style.top = `${selectRect.y - J_SelectionInfo.clientHeight - offsetY}px`
+    }
   }
 
   const onDragEnd = () => {
@@ -144,9 +142,22 @@ getScreenshot(async (imgSrc) => {
       const {
         r, b,
       } = capture.selectRect
+      const offsetY = 10
       J_SelectionToolbar.style.display = 'flex'
-      J_SelectionToolbar.style.top = `${b + 15}px`
-      J_SelectionToolbar.style.right = `${window.screen.width - r}px`
+      // 设置工具条位置
+      const tWidth = J_SelectionToolbar.clientWidth
+      const tHeight = J_SelectionToolbar.clientHeight
+      const { width: screenWidth, height: screenHeight } = window.screen
+      // x轴
+      J_SelectionToolbar.style.right = `${screenWidth - r}px`
+      if (J_SelectionToolbar.offsetLeft < 0) {
+        J_SelectionToolbar.style.right = `${screenWidth - tWidth}px`
+      }
+      // y轴
+      J_SelectionToolbar.style.top = `${b + offsetY}px`
+      if (screenHeight - b < tHeight + offsetY) {
+        J_SelectionToolbar.style.top = `${b - tHeight - offsetY}px`
+      }
     }
   }
 
