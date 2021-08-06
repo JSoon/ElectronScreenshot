@@ -100,13 +100,13 @@ const useCapture = (mainWindow) => {
   const screenShot = new Screenshot()
 
   //#region 注册全局快捷键
-  // 退出截屏
-  globalShortcut.register('Esc', () => {
-    if (screenshotWins?.length) {
-      screenshotWins.forEach(win => win.close())
-      screenshotWins = []
-    }
-  })
+  // 退出截屏 (暂时屏蔽ESC, 因为会导致其他应用ESC失效)
+  // globalShortcut.register('Esc', () => {
+  //   if (screenshotWins?.length) {
+  //     screenshotWins.forEach(win => win.close())
+  //     screenshotWins = []
+  //   }
+  // })
   // 启动截屏
   globalShortcut.register('CommandOrControl+Shift+A', screenShot.init)
   //#endregion

@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>截屏</title>
 
+  <link rel="stylesheet" href="https://at.alicdn.com/t/font_2726538_0k5kpygnrg3g.css">
   <style>
     * {
       box-sizing: border-box;
@@ -60,7 +61,7 @@
       color: #343434;
       font-size: 12px;
       background: #f5f5f5;
-      padding: 5px 10px;
+      padding: 6px 10px;
       border-radius: 4px;
       display: none;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
@@ -69,8 +70,26 @@
     }
 
     .selection-toolbar .selection-toolbar-item {
-      padding: 2px 5px;
+      padding: 2px 8px;
       cursor: pointer;
+    }
+
+    .selection-toolbar .selection-toolbar-item .es-refresh {
+      font-size: 21px;
+    }
+
+    .selection-toolbar .selection-toolbar-item .es-download {
+      font-size: 22px;
+    }
+
+    .selection-toolbar .selection-toolbar-item .es-close {
+      font-size: 22px;
+      color: #d84c4c;
+    }
+
+    .selection-toolbar .selection-toolbar-item .es-select {
+      font-size: 26px;
+      color: #46b93f;
     }
 
     .cursor-info {
@@ -126,13 +145,21 @@
   <!-- 选区工具条 -->
   <div id="J_SelectionToolbar" class="selection-toolbar">
     <!-- 选区重置 -->
-    <div id="J_SelectionReset" class="selection-toolbar-item">重置</div>
+    <div id="J_SelectionReset" class="selection-toolbar-item">
+      <i class="iconfont es-refresh"></i>
+    </div>
     <!-- 截图下载 -->
-    <div id="J_SelectionDownload" class="selection-toolbar-item">下载</div>
+    <div id="J_SelectionDownload" class="selection-toolbar-item">
+      <i class="iconfont es-download"></i>
+    </div>
     <!-- 取消 -->
-    <div id="J_SelectionCancel" class="selection-toolbar-item">取消</div>
+    <div id="J_SelectionCancel" class="selection-toolbar-item">
+      <i class="iconfont es-close"></i>
+    </div>
     <!-- 复制到剪切板 -->
-    <div id="J_SelectionConfirm" class="selection-toolbar-item">确定</div>
+    <div id="J_SelectionConfirm" class="selection-toolbar-item">
+      <i class="iconfont es-select"></i>
+    </div>
   </div>
   <!-- 鼠标处信息: 拾色器, 放大器, etc. -->
   <div id="J_CursorInfo" class="cursor-info">

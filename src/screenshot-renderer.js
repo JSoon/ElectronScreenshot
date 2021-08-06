@@ -47,18 +47,18 @@ getScreenshot(async (imgSrc) => {
   // 取色器
   const onColorPickHandler = e => {
     const { clientX, clientY } = e
-    const { data } = capture.bgCtx?.getImageData(
+    const imageData = capture.bgCtx?.getImageData(
       clientX * scaleFactor, 
       clientY * scaleFactor, 
       1 * scaleFactor , 
       1 * scaleFactor
     )
 
-    if (!data) {
+    if (!imageData) {
       return
     }
 
-    const [r, g, b, a] = data
+    const [r, g, b, a] = imageData.data
 
     // 设置样式
     const offset = 20
@@ -83,12 +83,15 @@ getScreenshot(async (imgSrc) => {
   // 放大镜
   const onManify = e => {
     const { clientX, clientY } = e
-    const imageData = capture.bgCtx.getImageData(
+    const imageData = capture.bgCtx?.getImageData(
       clientX * scaleFactor - J_CursorInfo.clientWidth / 2,
       clientY * scaleFactor - J_CursorInfo.clientHeight / 2,
       J_CursorInfo.clientWidth * scaleFactor,
       J_CursorInfo.clientHeight * scaleFactor
     )
+    if (!imageData) {
+      return
+    }
     let canvas = document.createElement('canvas')
     canvas.width = J_CursorInfo.clientWidth * scaleFactor
     canvas.height = J_CursorInfo.clientHeight * scaleFactor
