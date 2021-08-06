@@ -22,6 +22,7 @@
     }
 
     .bg {
+      z-index: 1;
       position: absolute;
       top: 0;
       left: 0;
@@ -30,6 +31,7 @@
     }
 
     .selection-mask {
+      z-index: 2;
       position: absolute;
       top: 0;
       left: 0;
@@ -39,12 +41,13 @@
     }
 
     .selection-canvas {
+      z-index: 3;
       position: absolute;
       display: none;
-      z-index: 1;
     }
 
     .selection-info {
+      z-index: 10;
       position: absolute;
       color: #ffffff;
       font-size: 12px;
@@ -53,10 +56,10 @@
       padding: 5px 10px;
       border-radius: 2px;
       display: none;
-      z-index: 2;
     }
 
     .selection-toolbar {
+      z-index: 10;
       position: absolute;
       color: #343434;
       font-size: 12px;
@@ -65,7 +68,6 @@
       border-radius: 4px;
       display: none;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-      z-index: 2;
       align-items: center;
     }
 
@@ -99,6 +101,7 @@
     }
 
     .cursor-info {
+      z-index: 10;
       position: absolute;
       display: none;
       width: 100px;
