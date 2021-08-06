@@ -128,7 +128,9 @@ getScreenshot(async (imgSrc) => {
     J_SelectionInfo.innerText = `${selectRect.w} * ${selectRect.h}`
     J_SelectionInfo.style.left = `${selectRect.x}px`
     if (screenWidth - selectRect.r < J_SelectionInfo.clientWidth) {
-      J_SelectionInfo.style.left = `${screenWidth - J_SelectionInfo.clientWidth}px`
+      if (selectRect.w < J_SelectionInfo.clientWidth) {
+        J_SelectionInfo.style.left = `${screenWidth - J_SelectionInfo.clientWidth}px`
+      }
     }
     J_SelectionInfo.style.top = `${selectRect.y + offsetY}px`
     if (selectRect.y > J_SelectionInfo.clientHeight + offsetY) {
