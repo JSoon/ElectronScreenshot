@@ -206,7 +206,7 @@ getScreenshot(async (imgSrc) => {
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT, {
       type: IPC_CHANNELS.SCREENSHOT_COMPLETE,
       screenId: currentScreen.id,
-      data,
+      data: url,
     })
   }
 
@@ -236,7 +236,7 @@ getScreenshot(async (imgSrc) => {
     ipcRenderer.send(IPC_CHANNELS.SAVE_SCREENSHOT_FILE, dataURL)
   })
 
-  // 3. 截屏取消
+  // 3. 截屏退出
   J_SelectionCancel.addEventListener('click', e => {
     window.close()
   })

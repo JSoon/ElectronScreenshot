@@ -24,12 +24,12 @@ class Screenshot {
       return
     }
 
-    console.log('截屏开始');
-
     // 获取屏幕上的所有可见显示
     let displays = screen.getAllDisplays()
 
     screenshotWins = displays.map(display => {
+      console.log('截屏开始', display.id);
+
       const win = new BrowserWindow({
         fullscreen: true,
         simpleFullscreen: true, // MacOS
@@ -81,7 +81,7 @@ class Screenshot {
           screenshotWins.splice(index, 1)
         }
         screenshotWins.forEach(win => win.close())
-        console.log('截屏取消');
+        console.log('截屏退出', display.id);
       })
 
       // 调试
@@ -125,7 +125,7 @@ const useCapture = (mainWindow) => {
     }
     // 截屏完成
     else if (type === IPC_CHANNELS.SCREENSHOT_COMPLETE) {
-      console.log('截屏完成');
+      console.log('截屏完成', screenId);
       // TODO: 导入主窗口, 向主窗口发送截屏完成事件
       if (mainWindow) {
         mainWindow.webContents.send(IPC_CHANNELS.SCREENSHOT_COMPLETE, {
@@ -145,7 +145,7 @@ const useCapture = (mainWindow) => {
       })
       console.log('截屏选区选择', screenId);
     }
-    // 截屏取消
+    // 截屏退出
     else if (type === IPC_CHANNELS.SCREENSHOT_CANCEL) {
       // nothing
     }
@@ -178,7 +178,6 @@ const useCapture = (mainWindow) => {
           filePath,
           Buffer.from(dataURL.replace('data:image/png;base64,', ''), 'base64'),
           () => {
-            console.log('截屏完成');
             win.close()
           }
         )
