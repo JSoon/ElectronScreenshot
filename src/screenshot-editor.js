@@ -247,12 +247,12 @@ class ScreenshotEditor extends Event {
     // 选区创建
     else {
       const { pageX, pageY } = e
-      let x // 选区相对于文档的X坐标
-      let y // 选区相对于文档的Y坐标
+      let x // 选区相对于整个文档的X坐标
+      let y // 选区相对于整个文档的Y坐标
       let w // 选区宽度
       let h // 选区高度
-      let r // 选区右边距离文档左边的偏移
-      let b // 选区底部距离文档顶部的偏移
+      let r // 选区右边距离整个文档左边的偏移
+      let b // 选区底部距离整个文档顶部的偏移
 
       // 始终将选区固定在开始坐标所在的屏幕范围
       if (this.startPoint.x > pageX) {

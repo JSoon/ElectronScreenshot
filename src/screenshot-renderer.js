@@ -48,9 +48,9 @@ getScreenshot(async (imgSrc) => {
   const onColorPickHandler = e => {
     const { clientX, clientY } = e
     const imageData = capture.bgCtx?.getImageData(
-      clientX * scaleFactor, 
-      clientY * scaleFactor, 
-      1 * scaleFactor , 
+      clientX * scaleFactor,
+      clientY * scaleFactor,
+      1 * scaleFactor,
       1 * scaleFactor
     )
 
@@ -73,7 +73,7 @@ getScreenshot(async (imgSrc) => {
     J_CursorInfo.style.display = 'block'
     J_CursorInfo.style.top = `${top}px`
     J_CursorInfo.style.left = `${left}px`
-    
+
     // 设置当前坐标
     J_CursorCoords.innerHTML = `坐标: (${clientX}, ${clientY})`
     // 设置当前颜色
