@@ -74,6 +74,11 @@ class Screenshot {
         win.blur()
       }
 
+      // 截屏结束前, 退出simpleFullscreen模式
+      win.on('close', () => {
+        win.setSimpleFullScreen(false)
+      })
+
       // 一个窗口关闭则关闭所有窗口
       win.on('closed', () => {
         const index = screenshotWins.indexOf(win)
@@ -85,7 +90,7 @@ class Screenshot {
       })
 
       // 调试
-      win.webContents.openDevTools()
+      // win.webContents.openDevTools()
 
       return win
     })
