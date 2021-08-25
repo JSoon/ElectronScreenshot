@@ -30,6 +30,9 @@ const J_CursorColor = document.querySelector('#J_CursorColor')
 // 右键取消截屏
 document.body.addEventListener('mousedown', e => {
   if (e.button === 2) {
+    // 先隐藏
+    ipcRenderer.send(IPC_CHANNELS.HIDE_CURRENT_WINDOW)
+    // 再关闭
     window.close()
   }
 }, true)
