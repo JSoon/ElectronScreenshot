@@ -124,12 +124,12 @@ const useCapture = (mainWindow) => {
   const SCREENSHOT_DEFAULT_SHORTCUT = 'CommandOrControl+Shift+A'
   globalShortcut.register(SCREENSHOT_DEFAULT_SHORTCUT, screenShot.init)
   // 全局截屏快捷键注册
-  ipcMain.on(IPC_CHANNELS.SCREENSHOT_REGISTER_SHORTCUTS, (e, shortcut) => {
-    globalShortcut.register(shortcut, screenShot.init)
+  ipcMain.handle(IPC_CHANNELS.SCREENSHOT_REGISTER_SHORTCUTS, (e, shortcut) => {
+    return globalShortcut.register(shortcut, screenShot.init)
   })
   // 全局截屏快捷键移除
-  ipcMain.on(IPC_CHANNELS.SCREENSHOT_UNREGISTER_SHORTCUTS, (e, shortcut) => {
-    globalShortcut.unregister(shortcut, screenShot.init)
+  ipcMain.handle(IPC_CHANNELS.SCREENSHOT_UNREGISTER_SHORTCUTS, (e, shortcut) => {
+    return globalShortcut.unregister(shortcut, screenShot.init)
   })
   //#endregion
 
