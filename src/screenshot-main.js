@@ -97,11 +97,16 @@ class Screenshot {
   }
 
 }
+
 /**
  * 使用截屏
  * @param {BrowserWindow} mainWindow 程序主窗口
  */
 const useCapture = (mainWindow) => {
+  if (!mainWindow) {
+    return
+  }
+
   const screenShot = new Screenshot()
 
   //#region 注册全局快捷键
