@@ -31,7 +31,7 @@ const J_CursorColor = document.querySelector('#J_CursorColor')
 document.body.addEventListener('mousedown', e => {
   if (e.button === 2) {
     // 先隐藏
-    ipcRenderer.send(IPC_CHANNELS.HIDE_CURRENT_WINDOW)
+    ipcRenderer.send(IPC_CHANNELS.SCREENSHOT_HIDE_CURRENT_WINDOW)
     // 再关闭
     window.close()
   }
@@ -40,7 +40,7 @@ document.body.addEventListener('mousedown', e => {
 // 截屏
 getScreenshot(async (imgSrc) => {
   // console.log(imgSrc);
-  const currentScreen = await ipcRenderer.invoke(IPC_CHANNELS.GET_CURRENT_SCREEN)
+  const currentScreen = await ipcRenderer.invoke(IPC_CHANNELS.SCREENSHOT_GET_CURRENT_SCREEN)
   const scaleFactor = currentScreen.scaleFactor
 
   // 创建截屏编辑器
@@ -198,7 +198,7 @@ getScreenshot(async (imgSrc) => {
     }
     let url = capture.getImageUrl()
     // 1. 隐藏截屏窗口
-    ipcRenderer.send(IPC_CHANNELS.HIDE_CURRENT_WINDOW)
+    ipcRenderer.send(IPC_CHANNELS.SCREENSHOT_HIDE_CURRENT_WINDOW)
 
     // 2. 播放截屏音
     audio.play()
@@ -238,7 +238,7 @@ getScreenshot(async (imgSrc) => {
     let dataURL = capture.getImageUrl() // base64 image
 
     // 保存截屏图片
-    ipcRenderer.send(IPC_CHANNELS.SAVE_SCREENSHOT_FILE, dataURL)
+    ipcRenderer.send(IPC_CHANNELS.SCREENSHOT_SAVE_FILE, dataURL)
   })
 
   // 3. 截屏退出

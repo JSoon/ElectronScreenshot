@@ -112,8 +112,20 @@ const useCapture = (mainWindow) => {
   //     screenshotWins = []
   //   }
   // })
-  // 启动截屏
-  globalShortcut.register('CommandOrControl+Shift+A', screenShot.init)
+  //#endregion
+
+  //#region 全局快捷键管理
+  // 注册默认截屏快捷键
+  const SCREENSHOT_DEFAULT_SHORTCUT = 'CommandOrControl+Shift+A'
+  globalShortcut.register(SCREENSHOT_DEFAULT_SHORTCUT, screenShot.init)
+  // 全局截屏快捷键注册
+  ipcMain.on(IPC_CHANNELS.SCREENSHOT_REGISTER_SHORTCUTS, (e, shortcut) => {
+    globalShortcut.register(shortcut, screenShot.init)
+  })
+  // 全局截屏快捷键移除
+  ipcMain.on(IPC_CHANNELS.SCREENSHOT_UNREGISTER_SHORTCUTS, (e, shortcut) => {
+    globalShortcut.unregister(shortcut, screenShot.init)
+  })
   //#endregion
 
   // 截屏事件
@@ -158,7 +170,7 @@ const useCapture = (mainWindow) => {
   })
 
   // 保存截屏图片文件
-  ipcMain.on(IPC_CHANNELS.SAVE_SCREENSHOT_FILE, async (e, dataURL) => {
+  ipcMain.on(IPC_CHANNELS.SCREENSHOT_SAVE_FILE, async (e, dataURL) => {
     const win = getCurrentWindow()
     // 隐藏截屏窗口
     win.hide()
@@ -193,28 +205,26 @@ const useCapture = (mainWindow) => {
   })
 
   // 获取当前窗口
-  ipcMain.handle(IPC_CHANNELS.GET_CURRENT_WINDOW, () => {
+  ipcMain.handle(IPC_CHANNELS.SCREENSHOT_GET_CURRENT_WINDOW, () => {
     return getCurrentWindow()
   })
 
   // 隐藏当前窗口
-  ipcMain.on(IPC_CHANNELS.HIDE_CURRENT_WINDOW, () => {
+  ipcMain.on(IPC_CHANNELS.SCREENSHOT_HIDE_CURRENT_WINDOW, () => {
     return hideCurrentWindow()
   })
 
   // 关闭当前窗口
-  ipcMain.on(IPC_CHANNELS.CLOSE_CURRENT_WINDOW, () => {
+  ipcMain.on(IPC_CHANNELS.SCREENSHOT_CLOSE_CURRENT_WINDOW, () => {
     return closeCurrentWindow()
   })
 
   // 获取当前屏幕
-  ipcMain.handle(IPC_CHANNELS.GET_CURRENT_SCREEN, () => {
+  ipcMain.handle(IPC_CHANNELS.SCREENSHOT_GET_CURRENT_SCREEN, () => {
     return getCurrentScreen()
   })
 
 }
-
-
 
 module.exports = {
   useCapture

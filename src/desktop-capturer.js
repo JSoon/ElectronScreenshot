@@ -8,7 +8,7 @@ const { IPC_CHANNELS } = require('./enums')
 // 获取截屏
 const getScreenshot = async (callback) => {
   // 获取当前屏幕
-  const currentScreen = await ipcRenderer.invoke(IPC_CHANNELS.GET_CURRENT_SCREEN)
+  const currentScreen = await ipcRenderer.invoke(IPC_CHANNELS.SCREENSHOT_GET_CURRENT_SCREEN)
 
   document.body.style.opacity = '0'
   let oldCursor = document.body.style.cursor
