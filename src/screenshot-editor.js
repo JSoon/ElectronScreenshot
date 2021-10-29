@@ -71,8 +71,11 @@ class ScreenshotEditor extends Event {
   }
 
   async init() {
-    this.$bg.style.backgroundImage = `url(${this.imageSrc})`
-    this.$bg.style.backgroundSize = `${this.screenWidth}px ${this.screenHeight}px`
+    // this.$bg.style.backgroundImage = `url(${this.imageSrc})`
+    // this.$bg.style.backgroundSize = `${this.screenWidth}px ${this.screenHeight}px`
+    this.$bg.setAttribute('src', this.imageSrc)
+    this.$bg.setAttribute('width', this.screenWidth)
+    this.$bg.setAttribute('height', this.screenHeight)
     let canvas = document.createElement('canvas')
     let ctx = canvas.getContext('2d')
     let img = await new Promise((resolve) => {
@@ -444,6 +447,7 @@ class ScreenshotEditor extends Event {
   }
 
   reset() {
+    this.disabled = false
     this.anchors = null
     this.startPoint = null
     this.selectRect = null

@@ -43,14 +43,16 @@ const getScreenshot = async (callback) => {
       let ctx = canvas.getContext('2d')
       // Draw video on canvas
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-      if (callback) {
-        // Save screenshot to png - base64
-        callback(canvas.toDataURL('image/png'))
-      } else {
-        // console.log('Need callback!')
-      }
-
+      canvas.toBlob((blob) => {
+        console.log(blob);
+        console.log(URL.createObjectURL(blob));
+        if (callback) {
+          // Save screenshot to png - base64
+          callback(URL.createObjectURL(blob))
+        } else {
+          // console.log('Need callback!')
+        }
+      }, 'image/jpeg', 0.5)
       // Remove hidden video tag
       video.remove()
       try {
