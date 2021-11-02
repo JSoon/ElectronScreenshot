@@ -52,7 +52,9 @@ const getScreenshot = async (callback) => {
         } else {
           // console.log('Need callback!')
         }
-      }, 'image/jpeg', 0.5)
+      }, 
+      // 设置截屏图片格式和质量
+      'image/jpeg', 0.9)
       // Remove hidden video tag
       video.remove()
       try {

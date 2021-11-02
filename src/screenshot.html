@@ -48,10 +48,11 @@
     .selection-editor-wrapper {
       z-index: 4;
       position: absolute;
+      display: none;
     }
     
     .selection-editor {
-
+      
     }
 
     .selection-info {
@@ -158,7 +159,7 @@
   <!-- 选区画布: 初始画布 -->
   <canvas id="J_SelectionCanvas" class="selection-canvas"></canvas>
   <!-- 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时销毁初始画布 -->
-  <div class="selection-editor-wrapper">
+  <div class="selection-editor-wrapper" id="J_SelectionEditorWrapper">
     <canvas id="J_SelectionEditor" class="selection-editor"></canvas>
   </div>
   <!-- 选区信息 -->
@@ -166,9 +167,7 @@
   <!-- 选区工具条 -->
   <div id="J_SelectionToolbar" class="selection-toolbar">
     <!-- 矩形工具 -->
-    <div id="J_SelectionRect" class="selection-toolbar-item">
-      口
-    </div>
+    <div id="J_SelectionRect" class="selection-toolbar-item">矩形</div>
     <!-- 选区重置 -->
     <div id="J_SelectionReset" class="selection-toolbar-item">
       <i class="iconfont es-refresh"></i>

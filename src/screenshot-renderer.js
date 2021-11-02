@@ -2,11 +2,11 @@
  * 截屏渲染进程
  */
 const path = require('path')
-const fabric = require("fabric").fabric
 const { ipcRenderer, clipboard, nativeImage } = require('electron')
 const { IPC_CHANNELS } = require('./enums')
 const { getScreenshot } = require('./desktop-capturer')
 const { ScreenshotEditor, EDITOR_EVENTS } = require('./screenshot-editor')
+const captureEditorAdvance = require('./screenshot-editor-advance')
 
 // 截屏音
 const audio = new Audio()
@@ -15,8 +15,6 @@ audio.src = path.join(__dirname, 'assets/audio/screenshot.mp3')
 const J_Background = document.querySelector('#J_Background')
 // 选区画布: 初始画布
 const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas')
-// 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时销毁初始画布
-const J_SelectionEditor = document.querySelector('#J_SelectionEditor')
 // 选区信息
 const J_SelectionInfo = document.querySelector('#J_SelectionInfo')
 // 选区工具条
@@ -31,6 +29,7 @@ const J_CursorInfo = document.querySelector('#J_CursorInfo')
 const J_CursorCoords = document.querySelector('#J_CursorCoords')
 const J_CursorColor = document.querySelector('#J_CursorColor')
 
+
 // 右键取消截屏
 document.body.addEventListener('mousedown', e => {
   if (e.button === 2) {
@@ -41,10 +40,6 @@ document.body.addEventListener('mousedown', e => {
   }
 }, true)
 
-function getCaptureFixed () {
-  
-}
-
 // 截屏
 getScreenshot(async (imgSrc) => {
   // console.log(imgSrc);
@@ -53,7 +48,12 @@ getScreenshot(async (imgSrc) => {
 
   // 创建截屏编辑器
   const capture = new ScreenshotEditor(currentScreen, J_SelectionCanvas, J_Background, imgSrc)
-  let captureFixed = null
+  // 初始化编辑截屏
+  const fabricCapture = captureEditorAdvance({ 
+    capture,
+    scaleFactor,
+  })
+  fabricCapture.initCanvas()
   
   //#region 移动鼠标, 显示鼠标处信息
   // 取色器
@@ -164,6 +164,11 @@ getScreenshot(async (imgSrc) => {
       type: IPC_CHANNELS.SCREENSHOT_SELECT,
       screenId: currentScreen.id,
     })
+
+    // 1. 更新编辑截屏
+    fabricCapture.updateCanvas()
+
+    // 2. 调整工具条样式
     const {
       r, b,
     } = capture.selectRect
@@ -212,7 +217,10 @@ getScreenshot(async (imgSrc) => {
     if (!capture.selectRect) {
       return
     }
-    let url = capture.getImageUrl()
+
+    // 优先获取工具编辑后的图片流, 若没有则获取原始截图数据
+    const dataURL = fabricCapture.getCanvasDataURL()
+
     // 1. 隐藏截屏窗口
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT_HIDE_CURRENT_WINDOW)
 
@@ -223,11 +231,11 @@ getScreenshot(async (imgSrc) => {
       window.close()
     }
     // 4. 写入图片到剪切板
-    clipboard.writeImage(nativeImage.createFromDataURL(url))
+    clipboard.writeImage(nativeImage.createFromDataURL(dataURL))
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT, {
       type: IPC_CHANNELS.SCREENSHOT_COMPLETE,
       screenId: currentScreen.id,
-      data: url,
+      data: dataURL,
     })
   }
 
@@ -244,164 +252,10 @@ getScreenshot(async (imgSrc) => {
   })
 
   //#region 截屏工具条
+  // 矩形工具
   J_SelectionRect.addEventListener('click', e => {
-    capture.disable()
-
-
-    const {
-      w, h, x, y, r, b,
-    } = capture.selectRect
-    
-    const scaleFactor = currentScreen.scaleFactor
-    // 选区锚点半径
-    const radius = 3
-    const lineWidth = 1
-    // 选区距锚点边距, 以保证锚点显示完全
-    const margin = radius + lineWidth
-    // J_SelectionEditor.style.left = `${x - margin}px`
-    // J_SelectionEditor.style.top = `${y - margin}px`
-    // J_SelectionEditor.style.width = `${w + margin * 2}px`
-    // J_SelectionEditor.style.height = `${h + margin * 2}px`
-    // J_SelectionEditor.style.display = 'block'
-    // J_SelectionEditor.width = (w + margin * 2) * scaleFactor
-    // J_SelectionEditor.height = (h + margin * 2) * scaleFactor
-
-
-
-    // 选区编辑画布变量对象
-    const cVars = {
-      drawingObj: null,
-      isMouseDown: false,
-      originX: 0,
-      originY: 0,
-    }
-    
-    // 选区编辑画布背景图
-    const canvasImage = new fabric.Image(J_Background, {
-      cropX: x * scaleFactor,
-      cropY: y * scaleFactor,
-      width: w * scaleFactor,
-      height: h * scaleFactor,
-      scaleX: 1 / scaleFactor,
-      scaleY: 1 / scaleFactor,
-    })
-    // 选区编辑画布
-    const canvas = new fabric.Canvas(J_SelectionEditor, {
-      width: w,
-      height: h,
-      // backgroundImage: canvasImage,
-      enableRetinaScaling: true,
-      backgroundColor: 'green',
-    });
-    // canvas.isDrawingMode = true;
-    const canvasWrapper = document.querySelector('.selection-editor-wrapper')
-    canvasWrapper.style.left = `${x}px`
-    canvasWrapper.style.top = `${y}px`
-
-    // https://stackoverflow.com/questions/9417603/fabric-js-free-draw-a-rectangle
-    canvas.on('mouse:down', function(e) {
-      cVars.isMouseDown = true;
-      
-      // 若点击在空白处, 则绘制图形
-      if (!e.target) {
-        const originPointer = canvas.getPointer(e);
-        cVars.originX = originPointer.x;
-        cVars.originY = originPointer.y;
-        const pointer = canvas.getPointer(e);
-        cVars.drawingObj = new fabric.Rect({
-            left: cVars.originX,
-            top: cVars.originY,
-            originX: 'left',
-            originY: 'top',
-            width: pointer.x - cVars.originX,
-            height: pointer.y - cVars.originY,
-            angle: 0,
-            rx: 4,
-            ry: 4,
-            fill: 'transparent',
-            stroke: 'red',
-            strokeWidth: 4,
-            strokeUniform: true,
-            // https://stackoverflow.com/questions/49005241/maintain-strokewidth-while-scaling-in-fabric-js
-            noScaleCache: false,
-            transparentCorners: false,
-        });
-        canvas.add(cVars.drawingObj);
-        // canvas.getObjects().forEach(obj => {
-        //   obj.set({ selectable: false });
-        //   obj.setCoords();
-        // });
-        canvas.renderAll();
-      }
-    });
-
-    canvas.on('mouse:move', function(e) {
-      if (!cVars.isMouseDown) {
-        return;
-      }
-
-      // 若拖动在空白处, 说明在绘制图形, 则改变图形位置和大小
-      if (!e.target) {
-        const pointer = canvas.getPointer(e);
-        
-        // 若拖动方向为左上, 则取坐标绝对值, 避免负值
-        if(cVars.originX > pointer.x) {
-            cVars.drawingObj.set({ left: Math.abs(pointer.x) });
-        }
-        if(cVars.originY > pointer.y) {
-            cVars.drawingObj.set({ top: Math.abs(pointer.y) });
-        }
-
-        cVars.drawingObj.set({ width: Math.abs(cVars.originX - pointer.x) });
-        cVars.drawingObj.set({ height: Math.abs(cVars.originY - pointer.y) });
-
-        // cVars.drawingObj.setCoords();
-        canvas.renderAll();
-      }
-    });
-
-    canvas.on('mouse:up', function(e) {
-      cVars.isMouseDown = false;
-      canvas.isDrawingMode = false;
-      // canvas.getObjects().forEach(obj => {
-      //   obj.set({ selectable: true });
-      //   obj.setCoords();
-      // });
-      canvas.renderAll();
-    });
-
-
-
-
-    // capture.ctx.clearRect(10, 10, 120, 100);
-
-
-
-
-    // const {
-    //   w, h, x, y, r, b,
-    // } = capture.selectRect
-    // console.log(capture.selectRect);
-    
-    // const ctxFixed = J_SelectionEditor.getContext('2d')
-    // const scaleFactor = currentScreen.scaleFactor
-    // // 选区锚点半径
-    // const radius = 3
-    // const lineWidth = 1
-    // // 选区距锚点边距, 以保证锚点显示完全
-    // const margin = radius + lineWidth
-    // J_SelectionEditor.style.left = `${x - margin}px`
-    // J_SelectionEditor.style.top = `${y - margin}px`
-    // J_SelectionEditor.style.width = `${w + margin * 2}px`
-    // J_SelectionEditor.style.height = `${h + margin * 2}px`
-    // J_SelectionEditor.style.display = 'block'
-    // J_SelectionEditor.width = (w + margin * 2) * scaleFactor
-    // J_SelectionEditor.height = (h + margin * 2) * scaleFactor
-
-    // let imageData = capture.bgCtx.getImageData(x * scaleFactor, y * scaleFactor, w * scaleFactor, h * scaleFactor)
-    // ctxFixed.putImageData(imageData, margin * scaleFactor, margin * scaleFactor)
-
-    // capture.reset()
+    fabricCapture.setType(fabricCapture.TYPE.RECT)
+    fabricCapture.show()
   })
 
   // 1. 选区重置
