@@ -20,6 +20,10 @@ npm i
 npm run start
 ```
 
+# Build
+
+构建前请先看[这里](https://zhuanlan.zhihu.com/p/110448415), 解决构建源下载超时的问题.
+
 # Todos
 
 - [x] 截屏图片复制到剪切板
