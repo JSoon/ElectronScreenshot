@@ -254,18 +254,19 @@ getScreenshot(async (imgSrc) => {
   //#region 截屏工具条
   // 矩形工具
   J_SelectionRect.addEventListener('click', e => {
+    J_SelectionCanvas.style.display = 'none'
     fabricCapture.setType(fabricCapture.TYPE.RECT)
     fabricCapture.show()
   })
 
   // 1. 选区重置
   J_SelectionReset.addEventListener('click', e => {
-    capture.reset()
+    fabricCapture.clearCanvas()
   })
 
   // 2. 截屏下载
   J_SelectionDownload.addEventListener('click', async e => {
-    let dataURL = capture.getImageUrl() // base64 image
+    const dataURL = fabricCapture.getCanvasDataURL()
 
     // 保存截屏图片
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT_SAVE_FILE, dataURL)
