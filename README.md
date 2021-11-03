@@ -13,14 +13,10 @@
 # Usage
 
 ```bash
-1. 设置npm国内镜像地址
-npm set registry https://registry.npm.taobao.org/
-npm set electron_mirror https://npm.taobao.org/mirrors/electron/
-
-2. 安装
+1. 安装
 npm i
 
-3. 运行
+2. 运行
 npm run start
 ```
 
