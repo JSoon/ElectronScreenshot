@@ -5,7 +5,10 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build:win": "electron-builder --dir --win --x64",
+    "postinstall": "electron-builder install-app-deps",
+    "pack": "electron-builder --dir",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,14 +25,14 @@
   },
   "homepage": "https://github.com/JSoon/ElectronScreenshot#readme",
   "engines": {
-    "node": "^12.22"
-  },
-  "devDependencies": {
-    "electron": "^13.1.7",
-    "electron-builder": "^22.13.1"
+    "node": "^14.18"
   },
   "dependencies": {
     "fabric": "^4.5.1"
+  },
+  "devDependencies": {
+    "electron": "^13.1.7",
+    "electron-builder": "21.2.0"
   },
   "build": {
     "appId": "com.electron.electronscreenshot",
@@ -40,9 +43,31 @@
       "output": "dist"
     },
     "win": {
-      "target": "portable",
-      "icon": "build/icon.png",
+      "target": {
+        "target": "nsis",
+        "arch": [
+          "ia32",
+          "x64"
+        ]
+      },
+      "artifactName": "electronscreenshot_${env.NODE_ENV}_${version}.${ext}",
+      "icon": "build/icon.ico",
       "publisherName": "soon"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "electronscreenshot",
+      "include": "",
+      "license": "",
+      "uninstallDisplayName": "electronscreenshot"
     }
   }
 }
