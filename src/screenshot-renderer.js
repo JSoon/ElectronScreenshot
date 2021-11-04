@@ -42,7 +42,8 @@ document.body.addEventListener('mousedown', e => {
 
 // 截屏
 getScreenshot(async (imgSrc) => {
-  // console.log(imgSrc);
+  console.log(imgSrc);
+
   const currentScreen = await ipcRenderer.invoke(IPC_CHANNELS.SCREENSHOT_GET_CURRENT_SCREEN)
   const scaleFactor = currentScreen.scaleFactor
 

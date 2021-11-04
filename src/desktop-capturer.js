@@ -9,13 +9,19 @@ const { IPC_CHANNELS } = require('./enums')
 const getScreenshot = async (callback) => {
   // 获取当前屏幕
   const currentScreen = await ipcRenderer.invoke(IPC_CHANNELS.SCREENSHOT_GET_CURRENT_SCREEN)
+  console.log('currentScreen', currentScreen);
 
   document.body.style.opacity = '0'
   let oldCursor = document.body.style.cursor
   document.body.style.cursor = 'none'
 
-  // TODO: 截图视频流, 鼠标无法隐藏
-  // https://github.com/electron/electron/issues/7584
+  /**
+   * 截屏视频流：多屏幕
+   * TODO:
+   * 1. 截屏视频流, 鼠标无法隐藏: https://github.com/electron/electron/issues/7584
+   * 2. 多屏幕处理
+   * @param {object} stream 视频流
+   */
   const handleStream = (stream) => {
     document.body.style.cursor = oldCursor
     document.body.style.opacity = '1'
@@ -45,7 +51,6 @@ const getScreenshot = async (callback) => {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
       canvas.toBlob((blob) => {
         console.log(blob);
-        console.log(URL.createObjectURL(blob));
         if (callback) {
           // Save screenshot to png - base64
           callback(URL.createObjectURL(blob))
@@ -70,33 +75,55 @@ const getScreenshot = async (callback) => {
     document.body.appendChild(video)
   }
 
+  // 截屏图片流：单屏幕
+  const handleDataURL = (dataURL) => {
+    callback?.(dataURL)
+  }
+
   const handleError = (e) => {
     console.log(e)
   }
 
   // 获取桌面数据源
+  const currentScreenBounds = currentScreen.bounds;
+  const currentScreenScaleFactor = currentScreen.scaleFactor;
   desktopCapturer.getSources({
     types: ['screen'],
-    thumbnailSize: { width: 1, height: 1 },
+    thumbnailSize: { 
+      width: currentScreenBounds.width * currentScreenScaleFactor, 
+      height: currentScreenBounds.height * currentScreenScaleFactor,
+    },
   }).then(async sources => {
-    // 获取当前显示屏幕
-    let selectSource = sources.filter(source => source.display_id + '' === currentScreen.id + '')[0]
-
+    // 是否支持display_id, 若不支持, 则说明系统不支持多屏幕
+    const isDisplayIdSupported = sources.some(source => source.display_id)
+    
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          mandatory: {
-            chromeMediaSource: 'desktop',
-            chromeMediaSourceId: selectSource.id,
-            minWidth: 1280,
-            maxWidth: 8000,
-            minHeight: 720,
-            maxHeight: 8000
+      // 若支持，则从视频流构建截屏
+      if (isDisplayIdSupported) {
+        // 获取当前显示屏幕
+        const selectSource = sources.filter(source => source.display_id + '' === currentScreen.id + '')[0]
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: selectSource.id,
+              minWidth: 1280,
+              maxWidth: 8000,
+              minHeight: 720,
+              maxHeight: 8000
+            }
           }
-        }
-      })
-      handleStream(stream)
+        })
+        handleStream(stream)
+      }
+      // 若不支持，则从缩略图构建截屏
+      else {
+        const selectSource = sources[0]?.thumbnail?.toDataURL({
+          scaleFactor: currentScreenScaleFactor
+        })
+        handleDataURL(selectSource)
+      }
     }
     catch (e) {
       handleError(e)
