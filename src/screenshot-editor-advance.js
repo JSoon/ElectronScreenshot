@@ -35,7 +35,7 @@ const captureEditorAdvance = ({
       ry: 4,
       fill: 'transparent',
       stroke: 'red',
-      strokeWidth: 4,
+      strokeWidth: 2,
       // https://stackoverflow.com/questions/49005241/maintain-strokewidth-while-scaling-in-fabric-js
       strokeUniform: true,
       noScaleCache: false,
@@ -60,8 +60,14 @@ const captureEditorAdvance = ({
   const getType = () => drawingType
 
   // 更新绘制相关配置
-  const setTypeConfig = (type, config) => {
+  const setTypeConfig = (type, config = {
+    // 描边颜色
+    stroke: 'red',
+    // 描边宽度
+    strokeWidth: 2
+  }) => {
     canvas.getActiveObject()?.set(config)
+    canvas.renderAll()
     Object.assign(drawingConfig[type], config)
   }
   const getTypeConfig = (type) => drawingConfig[type]

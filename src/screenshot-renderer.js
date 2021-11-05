@@ -19,6 +19,9 @@ const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas')
 const J_SelectionInfo = document.querySelector('#J_SelectionInfo')
 // 选区工具条
 const J_SelectionToolbar = document.querySelector('#J_SelectionToolbar')
+const J_ToolbarItemSettings = document.querySelectorAll('.J_ToolbarItemSettings')
+const J_StrokeWidth = document.querySelectorAll('.J_StrokeWidth')
+const J_StrokeColor = document.querySelectorAll('.J_StrokeColor')
 const J_SelectionRect = document.querySelector('#J_SelectionRect')
 const J_SelectionReset = document.querySelector('#J_SelectionReset')
 const J_SelectionDownload = document.querySelector('#J_SelectionDownload')
@@ -158,9 +161,11 @@ getScreenshot(async (imgSrc) => {
   }
 
   const onDragEnd = () => {
+    unbindCursorInfoHandler()
     if (!capture.selectRect) {
       return
     }
+    
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT, {
       type: IPC_CHANNELS.SCREENSHOT_SELECT,
       screenId: currentScreen.id,
@@ -253,19 +258,103 @@ getScreenshot(async (imgSrc) => {
   })
 
   //#region 截屏工具条
+  // 初始化截屏工具设置项样式
+  J_StrokeWidth.forEach(wrapper => {
+    wrapper.querySelectorAll('span').forEach((ele) => {
+      const { width = '' } = ele.dataset || {}
+      ele.style.width = `${width}px`
+      ele.style.height = `${width}px`
+    })
+  })
+  J_StrokeColor.forEach(wrapper => {
+    wrapper.querySelectorAll('span').forEach((ele) => {
+      const { color = '' } = ele.dataset || {}
+      ele.style.backgroundColor = color
+    })
+  })
+  
+  // 工具样式设置
+  J_ToolbarItemSettings.forEach(settings => {
+    settings.addEventListener('click', e => {
+      const type = e.currentTarget?.dataset?.type
+      const strokeWidth = e.target?.dataset?.width
+      const strokeColor = e.target?.dataset?.color
+
+      if (!type) {
+        return
+      }
+  
+      if (strokeWidth) {
+        // 设置高亮
+        const settings = e.target.parentElement.children
+        for (const item of settings) {
+          item.classList.remove('active')
+        }
+        e.target.classList.add('active')
+        // 设置描边宽度
+        fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
+          strokeWidth: Number(strokeWidth)
+        })
+      }
+  
+      if (strokeColor) {
+        // 设置高亮
+        const settings = e.target.parentElement.children
+        for (const item of settings) {
+          item.classList.remove('active')
+        }
+        e.target.classList.add('active')
+        // 设置描边颜色
+        fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
+          stroke: strokeColor
+        })
+      }
+    }, false)
+  })
+
+  // 工具设置位置调整
+  function updateToolbarSettingsPosition(settings) {
+    // 设置默认样式
+    settings.style.top = '100%'
+    settings.style.left = '-10px'
+    settings.style.marginTop = '20px'
+
+    const { width: screenWidth, height: screenHeight } = window.screen
+    const { top, right, bottom, left, width, height } = settings.getBoundingClientRect()
+
+    if (right > screenWidth) {
+      settings.style.left = `-${right - screenWidth}px`
+    }
+
+    if (bottom > screenHeight) {
+      settings.style.top = 'auto'
+      settings.style.bottom = '100%'
+      settings.style.marginTop = '0'
+      settings.style.marginBottom = '20px'
+    }
+  }
+
   // 矩形工具
   J_SelectionRect.addEventListener('click', e => {
+    // 隐藏原始截屏选区
     J_SelectionCanvas.style.display = 'none'
+    // 隐藏所有工具设置, 显示当前工具设置
+    J_ToolbarItemSettings.forEach(s => s.style.display = 'none')
+    const settings = e.currentTarget.querySelector('.J_ToolbarItemSettings')
+    settings.style.display = 'flex'
+    updateToolbarSettingsPosition(settings)
+    // 设置当前工具类型
     fabricCapture.setType(fabricCapture.TYPE.RECT)
+    // 显示编辑画布
     fabricCapture.show()
   })
 
-  // 1. 选区重置
+  // 选区重置
   J_SelectionReset.addEventListener('click', e => {
     fabricCapture.clearCanvas()
   })
 
-  // 2. 截屏下载
+  // 截屏下载
   J_SelectionDownload.addEventListener('click', async e => {
     const dataURL = fabricCapture.getCanvasDataURL()
 
@@ -273,12 +362,12 @@ getScreenshot(async (imgSrc) => {
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT_SAVE_FILE, dataURL)
   })
 
-  // 3. 截屏退出
+  // 截屏退出
   J_SelectionCancel.addEventListener('click', e => {
     window.close()
   })
 
-  // 4. 复制到剪切板
+  // 复制到剪切板
   J_SelectionConfirm.addEventListener('click', e => {
     selectionCapture()
   })

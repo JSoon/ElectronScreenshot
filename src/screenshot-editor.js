@@ -71,8 +71,6 @@ class ScreenshotEditor extends Event {
   }
 
   async init() {
-    // this.$bg.style.backgroundImage = `url(${this.imageSrc})`
-    // this.$bg.style.backgroundSize = `${this.screenWidth}px ${this.screenHeight}px`
     this.$bg.setAttribute('src', this.imageSrc)
     this.$bg.setAttribute('width', this.screenWidth)
     this.$bg.setAttribute('height', this.screenHeight)
@@ -219,6 +217,7 @@ class ScreenshotEditor extends Event {
     // 选区大小调整
     else if (this.action === RESIZE) {
       this.emit(EDITOR_EVENTS.DRAGGING, selectRect)
+      
       let { row, col } = ANCHORS[this.selectAnchorIndex]
       if (row) {
         this.startPoint.rawRect[row] = this.startPoint.selectRect[row] + pageX - this.startPoint.x
@@ -410,11 +409,25 @@ class ScreenshotEditor extends Event {
     this.mouseDown = false
     e.stopPropagation()
     e.preventDefault()
+
     this.emit(EDITOR_EVENTS.MOUSE_UP)
+    
+    // 若鼠标没移动, 则说明未拖动创建选区, 则绘制全屏选区
     if (!this.startPoint.moved) {
-      this.emit(EDITOR_EVENTS.MOVING_END)
-      return
+      // this.emit(EDITOR_EVENTS.MOVING_END)
+      // 设置全屏选区
+      if (!this.selectRect) {
+        this.selectRect = {
+          w: this.screenWidth,
+          h: this.screenHeight,
+          x: 0,
+          y: 0,
+          r: this.screenWidth,
+          b: this.screenHeight
+        }
+      }
     }
+
     this.emit(EDITOR_EVENTS.DRAGGING_END)
     this.drawRect()
     this.startPoint = null
@@ -425,7 +438,7 @@ class ScreenshotEditor extends Event {
     const {
       x, y, w, h,
     } = this.selectRect
-    // debugger
+    
     if (w && h) {
       let imageData = this.bgCtx.getImageData(x * scaleFactor, y * scaleFactor, w * scaleFactor, h * scaleFactor)
       let canvas = document.createElement('canvas')

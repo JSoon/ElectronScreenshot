@@ -20,6 +20,7 @@ let screenshotWins = []
 class Screenshot {
 
   init() {
+    // 若已经处于截屏状态, 则退出
     if (screenshotWins.length) {
       return
     }
@@ -90,7 +91,7 @@ class Screenshot {
       })
 
       // 调试
-      // win.webContents.openDevTools()
+      win.webContents.openDevTools()
 
       return win
     })
