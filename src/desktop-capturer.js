@@ -12,7 +12,7 @@ const getScreenshot = async (callback) => {
   console.log('currentScreen', currentScreen);
 
   document.body.style.opacity = '0'
-  let oldCursor = document.body.style.cursor
+  const oldCursor = document.body.style.cursor
   document.body.style.cursor = 'none'
 
   /**
@@ -23,8 +23,6 @@ const getScreenshot = async (callback) => {
    * @param {object} stream 视频流
    */
   const handleStream = (stream) => {
-    document.body.style.cursor = oldCursor
-    document.body.style.opacity = '1'
     // Create hidden video tag
     let video = document.createElement('video')
     video.style.cssText = 'position:absolute; top:-10000px; left:-10000px;'
@@ -124,48 +122,16 @@ const getScreenshot = async (callback) => {
         })
         handleDataURL(selectSource)
       }
+
+      // 恢复鼠标和背景图样式
+      document.body.style.cursor = oldCursor
+      document.body.style.opacity = '1'
     }
     catch (e) {
       handleError(e)
     }
-    // // Windows
-    // if (require('os').platform() === 'win32') {
-    //   navigator.mediaDevices.getUserMedia({
-    //       audio: false,
-    //       video: {
-    //           mandatory: {
-    //               chromeMediaSource: 'desktop',
-    //               chromeMediaSourceId: selectSource.id + '',
-    //               minWidth: 1280,
-    //               minHeight: 720,
-    //               maxWidth: 8000,
-    //               maxHeight: 8000,
-    //           },
-    //       },
-    //   }, (e) => {
-    //     handleStream(e)
-    //   }, handleError)
-    // }
-    // // Mac OS X
-    // else {
-    //   navigator.mediaDevices.getUserMedia({
-    //       audio: false,
-    //       video: {
-    //           mandatory: {
-    //               chromeMediaSource: 'desktop',
-    //               chromeMediaSourceId: `screen:${screen.id}`,
-    //               minWidth: 1280,
-    //               minHeight: 720,
-    //               maxWidth: 8000,
-    //               maxHeight: 8000,
-    //           },
-    //       },
-    //   }, (e) => {
-    //     handleStream(e)
-    //   }, handleError)
-    // }
-  })
-}
+  });
+};
 
 module.exports = {
   getScreenshot

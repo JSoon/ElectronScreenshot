@@ -46,28 +46,29 @@
       "target": {
         "target": "nsis",
         "arch": [
-          "ia32",
           "x64"
         ]
       },
-      "artifactName": "electronscreenshot_${env.NODE_ENV}_${version}.${ext}",
       "icon": "build/icon.ico",
       "publisherName": "soon"
     },
     "nsis": {
       "oneClick": false,
       "perMachine": true,
-      "allowElevation": false,
+      "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
       "installerHeaderIcon": "build/icon.ico",
+      "uninstallDisplayName": "${productName}_${env.NODE_ENV}_${version}",
+
+      "artifactName": "${productName}_${env.NODE_ENV}_${version}.${ext}",
+      "deleteAppDataOnUninstall": false,
+      
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "electronscreenshot",
-      "include": "",
-      "license": "",
-      "uninstallDisplayName": "electronscreenshot"
+      "menuCategory": false,
+      "shortcutName": "${productName}"
     }
   }
 }
