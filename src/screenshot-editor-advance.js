@@ -22,7 +22,7 @@ const captureEditorAdvance = ({
   // 绘制类型
   const TYPE = {
     RECT: 1, // 矩形
-    CIRCLE: 2, // 圆形
+    ELLIPSE: 2, // 椭圆形
     ARROW: 3, // 箭头
     BRUSH: 4, // 画笔
     TEXT: 5, // 文本
@@ -41,7 +41,15 @@ const captureEditorAdvance = ({
       noScaleCache: false,
       transparentCorners: false,
     },
-    [TYPE.CIRCLE]: {},
+    [TYPE.ELLIPSE]: {
+      fill: 'transparent',
+      stroke: 'red',
+      strokeWidth: 2,
+      // https://stackoverflow.com/questions/49005241/maintain-strokewidth-while-scaling-in-fabric-js
+      strokeUniform: true,
+      noScaleCache: false,
+      transparentCorners: false,
+    },
     [TYPE.ARROW]: {},
     [TYPE.BRUSH]: {},
     [TYPE.TEXT]: {},
@@ -209,28 +217,41 @@ const captureEditorAdvance = ({
     
     // 鼠标移动时, 创建绘制对象
     if (!isDrawingCreated) {
-      // 缓存初始绘制坐标
+      // 初始绘制坐标
       const originPointer = canvas.getPointer(e);
       originX = originPointer.x;
       originY = originPointer.y;
-      // 获取最新坐标
-      const pointer = canvas.getPointer(e);
       // 绘制对象
       let obj = null;
+      let objAPI = null;
+      let objOpts = {};
+      // 公共配置
+      const commonOpts = {
+        originX: 'left',
+        originY: 'top',
+        left: originX,
+        top: originY,
+      };
   
       // 绘制矩形
       if (drawingType === TYPE.RECT) {
-        obj = new fabric.Rect({
+        objAPI = fabric.Rect;
+        objOpts = {
+          ...commonOpts,
           ...drawingConfig[TYPE.RECT],
-          left: originX,
-          top: originY,
-          originX: 'left',
-          originY: 'top',
-          width: pointer.x - originX,
-          height: pointer.y - originY,
-        });
+        };
+      }
+      // 绘制椭圆形
+      else if (drawingType === TYPE.ELLIPSE) {
+        objAPI = fabric.Ellipse;
+        objOpts = {
+          ...commonOpts,
+          ...drawingConfig[TYPE.ELLIPSE],
+        };
       }
       
+      console.log('objOpts', objOpts);
+      obj = new objAPI(objOpts);
       canvas.add(obj);
       canvas.setActiveObject(obj, e);
       canvas.renderAll();
@@ -238,23 +259,34 @@ const captureEditorAdvance = ({
       isDrawingCreated = true;
     }
 
+    // 获取最新坐标
     const pointer = canvas.getPointer(e);
+    // 获取当前激活图形
     const obj = canvas.getActiveObject();
     
     // 设置图形位置
     // 若拖动方向为左上, 则取坐标绝对值, 避免负值
-    if(originX > pointer.x) {
+    if (originX > pointer.x) {
         obj.set({ left: Math.abs(pointer.x) });
     }
-    if(originY > pointer.y) {
+    if (originY > pointer.y) {
         obj.set({ top: Math.abs(pointer.y) });
     }
 
-    // 设置图形尺寸
-    obj.set({ 
-      width: Math.abs(originX - pointer.x),
-      height: Math.abs(originY - pointer.y)
-    });
+    // 设置矩形尺寸
+    if (drawingType === TYPE.RECT) {
+      obj.set({
+        width: Math.abs(originX - pointer.x),
+        height: Math.abs(originY - pointer.y),
+      });
+    }
+    // 设置椭圆形尺寸
+    else if (drawingType === TYPE.ELLIPSE) {
+      obj.set({
+        rx: Math.abs(originX - pointer.x) / 2,
+        ry: Math.abs(originY - pointer.y) / 2,
+      });
+    }
     
     canvas.renderAll();
   }
