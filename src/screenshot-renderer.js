@@ -24,6 +24,7 @@ const J_StrokeWidth = document.querySelectorAll('.J_StrokeWidth')
 const J_StrokeColor = document.querySelectorAll('.J_StrokeColor')
 const J_SelectionRect = document.querySelector('#J_SelectionRect')
 const J_SelectionEllipse = document.querySelector('#J_SelectionEllipse')
+const J_SelectionArrow = document.querySelector('#J_SelectionArrow')
 const J_SelectionReset = document.querySelector('#J_SelectionReset')
 const J_SelectionDownload = document.querySelector('#J_SelectionDownload')
 const J_SelectionCancel = document.querySelector('#J_SelectionCancel')
@@ -363,6 +364,21 @@ getScreenshot(async (imgSrc) => {
     updateToolbarSettingsPosition(settings)
     // 设置当前工具类型
     fabricCapture.setType(fabricCapture.TYPE.ELLIPSE)
+    // 显示编辑画布
+    fabricCapture.show()
+  })
+
+  // 箭头工具
+  J_SelectionArrow.addEventListener('click', e => {
+    // 隐藏原始截屏选区
+    J_SelectionCanvas.style.display = 'none'
+    // 隐藏所有工具设置, 显示当前工具设置
+    J_ToolbarItemSettings.forEach(s => s.style.display = 'none')
+    const settings = e.currentTarget.querySelector('.J_ToolbarItemSettings')
+    settings.style.display = 'flex'
+    updateToolbarSettingsPosition(settings)
+    // 设置当前工具类型
+    fabricCapture.setType(fabricCapture.TYPE.ARROW)
     // 显示编辑画布
     fabricCapture.show()
   })
