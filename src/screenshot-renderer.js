@@ -306,11 +306,17 @@ getScreenshot(async (imgSrc) => {
           item.classList.remove('active')
         }
         e.target.classList.add('active')
-        // 设置描边颜色
-        fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
-          fill: strokeColor,
-          stroke: strokeColor,
-        })
+        if (type === 'ARROW') {
+          fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
+            color: strokeColor,
+          })
+        }
+        else {
+          // 设置描边颜色
+          fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
+            stroke: strokeColor,
+          })
+        }
       }
     }, false)
   })

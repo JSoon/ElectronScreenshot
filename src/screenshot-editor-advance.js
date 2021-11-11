@@ -51,7 +51,7 @@ const captureEditorAdvance = ({
       transparentCorners: false,
     },
     [TYPE.ARROW]: {
-      fill: 'red',
+      color: 'red',
       // 尺寸: sm, md, lg
       size: 'sm',
     },
@@ -105,13 +105,13 @@ const captureEditorAdvance = ({
       }
 
       arrowHead.set({
-        fill: config.fill,
+        fill: config.color,
       });
       arrowLine.set({
-        stroke: config.fill,
+        stroke: config.color,
       });
       arrowTail.set({
-        fill: config.fill,
+        fill: config.color,
       });
     }
     
@@ -413,6 +413,12 @@ const captureEditorAdvance = ({
     if (isDrawingCreated) {
       canvas.discardActiveObject(e);
     }
+
+    // 若当前激活对象为箭头中线, 则转而激活关联的箭头头部, 使其层级恢复至箭头头部和尾部之下, 
+    // 避免头部和尾部部分被遮蔽, 影响拖动交互
+    if (canvas.getActiveObject()?.arrowPart === 'arrowLine') {
+      canvas.setActiveObject(canvas.getActiveObject().arrowHead);
+    }
     
     isMouseDown = false;
     isDrawingCreated = false;
@@ -501,11 +507,6 @@ class Arrow {
       lockScalingY: true,
     });
     this.arrowLine.on('moving', this.arrowLineMovingHandler);
-    this.arrowLine.on('moved', function (e) {
-      // 中线移动结束后, 取消激活状态, 使其层级恢复至箭头头部和尾部之下, 避免头部和尾部部分被遮蔽, 影响拖动交互
-      canvas.discardActiveObject(e);
-      canvas.setActiveObject(this.arrowHead);
-    });
 
     // 箭头尾部
     this.arrowTail = new fabric.Circle({
