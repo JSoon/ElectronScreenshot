@@ -50,7 +50,11 @@ const captureEditorAdvance = ({
       noScaleCache: false,
       transparentCorners: false,
     },
-    [TYPE.ARROW]: {},
+    [TYPE.ARROW]: {
+      fill: 'red',
+      // 尺寸: sm, md, lg
+      size: 'sm',
+    },
     [TYPE.BRUSH]: {},
     [TYPE.TEXT]: {},
   }
@@ -68,15 +72,51 @@ const captureEditorAdvance = ({
   const getType = () => drawingType
 
   // 更新绘制相关配置
-  const setTypeConfig = (type, config = {
-    // 描边颜色
-    stroke: 'red',
-    // 描边宽度
-    strokeWidth: 2
-  }) => {
-    canvas.getActiveObject()?.set(config)
-    canvas.renderAll()
-    Object.assign(drawingConfig[type], config)
+  const setTypeConfig = (type, config = {}) => {
+    // 非箭头, 则设置单个激活对象配置
+    if (type !== TYPE.ARROW) {
+      canvas.getActiveObject()?.set(config);
+    }
+    // 箭头, 则分别设置头部, 中线, 尾部配置
+    else if (type === TYPE.ARROW) {
+      const arrowPart = canvas.getActiveObject();
+      if (!arrowPart) {
+        return;
+      }
+
+      let arrowHead = null;
+      let arrowLine = null;
+      let arrowTail = null;
+
+      if (!arrowPart.arrowHead) {
+        arrowHead = arrowPart;
+        arrowLine = arrowPart.arrowLine;
+        arrowTail = arrowPart.arrowTail;
+      }
+      if (!arrowPart.arrowLine) {
+        arrowLine = arrowPart;
+        arrowHead = arrowPart.arrowHead;
+        arrowTail = arrowPart.arrowTail;
+      }
+      if (!arrowPart.arrowTail) {
+        arrowTail = arrowPart;
+        arrowHead = arrowPart.arrowHead;
+        arrowLine = arrowPart.arrowLine;
+      }
+
+      arrowHead.set({
+        fill: config.fill,
+      });
+      arrowLine.set({
+        stroke: config.fill,
+      });
+      arrowTail.set({
+        fill: config.fill,
+      });
+    }
+    
+    Object.assign(drawingConfig[type], config);
+    canvas.renderAll();
   }
   const getTypeConfig = (type) => drawingConfig[type]
 
@@ -319,7 +359,7 @@ const captureEditorAdvance = ({
       const arrowHead = obj;
       const arrowLine = obj.arrowLine;
       const arrowTail = obj.arrowTail;
-
+      
       // 中线端点坐标
       const x1 = originX;
       const y1 = originY;
@@ -350,6 +390,11 @@ const captureEditorAdvance = ({
       arrowTail.set({
         radius: tailRadius,
       });
+
+      Arrow.fixLayerIndex(arrowHead, arrowLine, arrowTail);
+      arrowHead.setCoords();
+      arrowLine.setCoords();
+      arrowTail.setCoords();
     }
     
     obj.setCoords();
@@ -437,10 +482,9 @@ class Arrow {
       angle: 0,
       width: 0,
       height: 0,
-      fill: 'green'
+      fill: 'green',
     });
     this.arrowHead.on('moving', this.arrowHeadMovingHandler);
-    this.arrowHead.on('moved', this.fixLayerIndex);
 
     // 箭头中线
     this.arrowLine = new fabric.Line([left, top, left, top], {
@@ -454,10 +498,14 @@ class Arrow {
       originX: 'center',
       originY: 'center',
       lockScalingX: true,
-      lockScalingY: true
+      lockScalingY: true,
     });
     this.arrowLine.on('moving', this.arrowLineMovingHandler);
-    this.arrowLine.on('moved', this.fixLayerIndex);
+    this.arrowLine.on('moved', function (e) {
+      // 中线移动结束后, 取消激活状态, 使其层级恢复至箭头头部和尾部之下, 避免头部和尾部部分被遮蔽, 影响拖动交互
+      canvas.discardActiveObject(e);
+      canvas.setActiveObject(this.arrowHead);
+    });
 
     // 箭头尾部
     this.arrowTail = new fabric.Circle({
@@ -465,6 +513,7 @@ class Arrow {
       left,
       top,
       radius: 2,
+      fill: 'red',
       originX: 'center',
       originY: 'center',
       hasBorders: false,
@@ -472,10 +521,8 @@ class Arrow {
       lockScalingX: true,
       lockScalingY: true,
       lockRotation: true,
-      fill: 'red'
     });
     this.arrowTail.on('moving', this.arrowTailMovingHandler);
-    this.arrowTail.on('moved', this.fixLayerIndex);
     
     // 创建关联引用
     this.arrowHead.arrowLine = this.arrowLine;
@@ -500,39 +547,36 @@ class Arrow {
     const deltaY = arrowLine.top - oldCenterY;
 
     // 更新箭头头部位置
-    arrowHead
-      .set({
-        left: arrowLine.x2 + deltaX,
-        top: arrowLine.y2 + deltaY,
-      })
-      .setCoords();
+    arrowHead.set({
+      left: arrowLine.x2 + deltaX,
+      top: arrowLine.y2 + deltaY,
+    });
 
     // 更新箭头尾部位置
-    arrowTail
-      .set({
-        left: arrowLine.x1 + deltaX,
-        top: arrowLine.y1 + deltaY,
-      })
-      .setCoords();
+    arrowTail.set({
+      left: arrowLine.x1 + deltaX,
+      top: arrowLine.y1 + deltaY,
+    });
 
     // 更新箭头中线端点坐标
-    arrowLine
-      .set({
-        x1: arrowLine.x1 + deltaX,
-        y1: arrowLine.y1 + deltaY,
-        x2: arrowLine.x2 + deltaX,
-        y2: arrowLine.y2 + deltaY,
-      })
+    arrowLine.set({
+      x1: arrowLine.x1 + deltaX,
+      y1: arrowLine.y1 + deltaY,
+      x2: arrowLine.x2 + deltaX,
+      y2: arrowLine.y2 + deltaY,
+    });
     
     // 更新箭头中点坐标
     const newCenterX = (arrowLine.x1 + arrowLine.x2) / 2;
     const newCenterY = (arrowLine.y1 + arrowLine.y2) / 2;
-    arrowLine
-      .set({
-        left: newCenterX,
-        top: newCenterY,
-      })
+    arrowLine.set({
+      left: newCenterX,
+      top: newCenterY,
+    });
 
+    Arrow.fixLayerIndex(arrowHead, arrowLine, arrowTail);
+    arrowHead.setCoords();
+    arrowTail.setCoords();
     this.canvas.renderAll();
   }
 
@@ -572,6 +616,7 @@ class Arrow {
     });
 
     arrowLine.setCoords();
+    arrowTail.setCoords();
     this.canvas.renderAll();
   }
 
@@ -612,16 +657,13 @@ class Arrow {
       radius: tailRadius,
     });
 
+    arrowHead.setCoords();
     arrowLine.setCoords();
     this.canvas.renderAll();
   }
 
   // 更新箭头头部尺寸
   static updateHeadSize (x1, y1, x2, y2) {
-    x1 = x1 || this.arrowLine.get('x1');
-    y1 = y1 || this.arrowLine.get('y1');
-    x2 = x2 || this.arrowLine.get('x2');
-    y2 = y2 || this.arrowLine.get('y2');
     const arrowLineLength = Math.abs(Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2)));
     let headSize = arrowLineLength / 3;
     if (headSize > Arrow.headMaxSize) {
@@ -632,19 +674,11 @@ class Arrow {
 
   // 更新箭头头部角度
   static updateHeadAngle (x1, y1, x2, y2) {
-    x1 = x1 || this.arrowLine.get('x1');
-    y1 = y1 || this.arrowLine.get('y1');
-    x2 = x2 || this.arrowLine.get('x2');
-    y2 = y2 || this.arrowLine.get('y2');
     return Arrow.calcArrowAngle(x1, y1, x2, y2);
   }
 
   // 更新箭头中线描边宽度
   static updateLineStrokeWidth (x1, y1, x2, y2) {
-    x1 = x1 || this.arrowLine.get('x1');
-    y1 = y1 || this.arrowLine.get('y1');
-    x2 = x2 || this.arrowLine.get('x2');
-    y2 = y2 || this.arrowLine.get('y2');
     const arrowLineLength = Math.abs(Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2)));
     let lineStrokeWidth = arrowLineLength / 5;
     if (lineStrokeWidth > Arrow.lineMaxStrokeWidth) {
@@ -684,10 +718,7 @@ class Arrow {
   }
 
   // 固定形状层级
-  fixLayerIndex () {
-    const arrowHead = this.arrowHead || this;
-    const arrowLine = this.arrowLine || this;
-    const arrowTail = this.arrowTail || this;
+  static fixLayerIndex (arrowHead, arrowLine, arrowTail) {
     arrowHead.moveTo(Arrow.arrowHeadIndex);
     arrowLine.moveTo(Arrow.arrowLineIndex);
     arrowTail.moveTo(Arrow.arrowTailIndex);

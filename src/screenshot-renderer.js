@@ -308,7 +308,8 @@ getScreenshot(async (imgSrc) => {
         e.target.classList.add('active')
         // 设置描边颜色
         fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
-          stroke: strokeColor
+          fill: strokeColor,
+          stroke: strokeColor,
         })
       }
     }, false)
