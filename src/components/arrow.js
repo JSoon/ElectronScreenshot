@@ -18,7 +18,10 @@ class Arrow {
   static arrowTailIndex = 2;
   
   // 默认配置
-  config = {};
+  config = {
+    color: 'red',
+    size: 'sm',
+  };
   // 箭头各部位尺寸最大变化阈值: 中线超出该长度, 则各部位尺寸不再变化
   static resizeThreshold = 100;
   // 箭头尺寸预设值
@@ -61,7 +64,7 @@ class Arrow {
       angle: 0,
       width: 0,
       height: 0,
-      fill: 'green',
+      fill: this.config.color,
     });
     this.arrowHead.on('moving', this.arrowHeadMovingHandler.bind(this));
 
@@ -70,8 +73,8 @@ class Arrow {
       arrowPart: 'arrowLine',
       left,
       top,
-      stroke: 'blue',
-      strokeWidth: 2,
+      stroke: this.config.color,
+      strokeWidth: 0,
       hasBorders: false,
       hasControls: false,
       originX: 'center',
@@ -86,8 +89,8 @@ class Arrow {
       arrowPart: 'arrowTail',
       left,
       top,
-      radius: 2,
-      fill: 'red',
+      radius: 0,
+      fill: this.config.color,
       originX: 'center',
       originY: 'center',
       hasBorders: false,
