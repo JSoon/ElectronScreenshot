@@ -22,6 +22,16 @@ const IPC_CHANNELS = {
   SCREENSHOT_UNREGISTER_SHORTCUTS: 'unregister-shortcuts',
 }
 
+// 形状类型
+const SHAPE_TYPE = {
+  RECT: 1, // 矩形
+  ELLIPSE: 2, // 椭圆形
+  ARROW: 3, // 箭头
+  BRUSH: 4, // 画笔
+  TEXT: 5, // 文本
+}
+
 module.exports = {
   IPC_CHANNELS,
+  SHAPE_TYPE,
 }

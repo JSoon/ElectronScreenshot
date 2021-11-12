@@ -3,12 +3,61 @@
  */
 const fabric = require("fabric").fabric;
 const Arrow = require('./components/arrow');
+const { SHAPE_TYPE } = require('./enums');
 
 // 截屏底图
 const J_Background = document.querySelector('#J_Background')
+// 选区画布: 初始画布
+const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas')
+// 选区工具条
+const J_ToolbarItemSettings = document.querySelectorAll('.J_ToolbarItemSettings')
 // 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时销毁初始画布
 const J_SelectionEditorWrapper = document.querySelector('#J_SelectionEditorWrapper')
 const J_SelectionEditor = document.querySelector('#J_SelectionEditor')
+
+// 工具设置位置调整
+function updateToolbarSettingsPosition(settings) {
+  // 设置默认样式
+  settings.style.top = '100%'
+  settings.style.left = '-10px'
+  settings.style.marginTop = '20px'
+
+  const { width: screenWidth, height: screenHeight } = window.screen
+  const { right, bottom } = settings.getBoundingClientRect()
+
+  // 调整右侧超出视窗宽度
+  if (right > screenWidth) {
+    settings.style.left = `-${right - screenWidth}px`
+  }
+
+  // 调整底部超出视窗范围
+  if (bottom > screenHeight) {
+    settings.style.top = 'auto'
+    settings.style.bottom = '100%'
+    settings.style.marginTop = '0'
+    settings.style.marginBottom = '20px'
+  }
+}
+
+// 设置当前绘制工具框
+const setDrawingTool = (settings, { setType, show, getCanvas }, type, discardActiveObject = false) => {
+  // 隐藏原始截屏选区
+  J_SelectionCanvas.style.display = 'none'
+  // 隐藏所有工具设置, 显示当前工具设置
+  J_ToolbarItemSettings.forEach(s => s.style.display = 'none')
+  settings.style.display = 'flex'
+  updateToolbarSettingsPosition(settings)
+  // 设置当前工具类型
+  setType(type)
+  // 显示编辑画布
+  show()
+  // 是否取消当前激活对象
+  if (discardActiveObject) {
+    const canvas = getCanvas()
+    canvas?.discardActiveObject()
+    canvas?.renderAll()
+  }
+}
 
 // 高级编辑器模块函数
 const captureEditorAdvance = ({
@@ -21,17 +70,10 @@ const captureEditorAdvance = ({
   let canvas = null;
 
   // 绘制类型
-  const TYPE = {
-    RECT: 1, // 矩形
-    ELLIPSE: 2, // 椭圆形
-    ARROW: 3, // 箭头
-    BRUSH: 4, // 画笔
-    TEXT: 5, // 文本
-  };
   let drawingType = null;
   // 绘制默认配置
   let drawingConfig = {
-    [TYPE.RECT]: {
+    [SHAPE_TYPE.RECT]: {
       rx: 4,
       ry: 4,
       fill: 'transparent',
@@ -42,7 +84,7 @@ const captureEditorAdvance = ({
       noScaleCache: false,
       transparentCorners: false,
     },
-    [TYPE.ELLIPSE]: {
+    [SHAPE_TYPE.ELLIPSE]: {
       fill: 'transparent',
       stroke: 'red',
       strokeWidth: 2,
@@ -51,13 +93,13 @@ const captureEditorAdvance = ({
       noScaleCache: false,
       transparentCorners: false,
     },
-    [TYPE.ARROW]: {
+    [SHAPE_TYPE.ARROW]: {
       color: 'red',
       // 尺寸: sm, md, lg
       size: 'sm',
     },
-    [TYPE.BRUSH]: {},
-    [TYPE.TEXT]: {},
+    [SHAPE_TYPE.BRUSH]: {},
+    [SHAPE_TYPE.TEXT]: {},
   }
   
   // 绘制事件相关变量
@@ -69,17 +111,17 @@ const captureEditorAdvance = ({
   // 设置/获取绘制类型
   const setType = (type) => {
     drawingType = type
-  }
-  const getType = () => drawingType
+  };
+  const getType = () => drawingType;
 
   // 更新绘制相关配置
   const setTypeConfig = (type, config = {}) => {
     // 若非箭头工具, 则设置单个激活对象配置
-    if (type !== TYPE.ARROW) {
+    if (type !== SHAPE_TYPE.ARROW) {
       canvas.getActiveObject()?.set(config);
     }
     // 若是箭头工具, 则分别设置头部, 中线, 尾部配置
-    else if (type === TYPE.ARROW) {
+    else if (type === SHAPE_TYPE.ARROW) {
       const arrowPart = canvas.getActiveObject();
       // 若存在选中箭头, 则更新箭头配置
       if (arrowPart) {
@@ -103,7 +145,7 @@ const captureEditorAdvance = ({
           arrowLine = arrowPart.arrowLine;
         }
         
-        const arrowConfig = getTypeConfig(TYPE.ARROW);
+        const arrowConfig = getTypeConfig(SHAPE_TYPE.ARROW);
         const { 
           size = arrowConfig.size, 
           color = arrowConfig.color,
@@ -182,6 +224,9 @@ const captureEditorAdvance = ({
     // 绑定画布事件
     bindEvents()
   }
+
+  // 获取编辑画布
+  const getCanvas = () => canvas;
 
   // 更新编辑画布
   const updateCanvas = () => {
@@ -296,35 +341,40 @@ const captureEditorAdvance = ({
       };
   
       // 绘制矩形
-      if (drawingType === TYPE.RECT) {
+      if (drawingType === SHAPE_TYPE.RECT) {
         objAPI = fabric.Rect;
         objOpts = {
           ...commonOpts,
-          ...drawingConfig[TYPE.RECT],
+          ...drawingConfig[SHAPE_TYPE.RECT],
         };
         obj = new objAPI(objOpts);
+        obj.__TYPE__ = 'RECT';
         canvas.add(obj);
         canvas.setActiveObject(obj, e);
       }
       // 绘制椭圆形
-      else if (drawingType === TYPE.ELLIPSE) {
+      else if (drawingType === SHAPE_TYPE.ELLIPSE) {
         objAPI = fabric.Ellipse;
         objOpts = {
           ...commonOpts,
-          ...drawingConfig[TYPE.ELLIPSE],
+          ...drawingConfig[SHAPE_TYPE.ELLIPSE],
         };
         obj = new objAPI(objOpts);
+        obj.__TYPE__ = 'ELLIPSE';
         canvas.add(obj);
         canvas.setActiveObject(obj, e);
       }
       // 绘制箭头
-      else if (drawingType === TYPE.ARROW) {
+      else if (drawingType === SHAPE_TYPE.ARROW) {
         objOpts = {
           ...commonOpts,
           canvas,
-          config: drawingConfig[TYPE.ARROW],
+          config: drawingConfig[SHAPE_TYPE.ARROW],
         }
         obj = new Arrow(objOpts);
+        obj.arrowLine.__TYPE__ = 'ARROW';
+        obj.arrowTail.__TYPE__ = 'ARROW';
+        obj.arrowHead.__TYPE__ = 'ARROW';
         canvas.add(obj.arrowLine, obj.arrowTail, obj.arrowHead);
         canvas.setActiveObject(obj.arrowHead, e);
       }
@@ -341,7 +391,7 @@ const captureEditorAdvance = ({
     const obj = canvas.getActiveObject();
     
     // 更新矩形
-    if (drawingType === TYPE.RECT) {
+    if (drawingType === SHAPE_TYPE.RECT) {
       // 设置矩形左上角坐标
       // 若拖动方向为左上, 则取坐标绝对值, 避免负值
       if (originX > pointer.x) {
@@ -357,7 +407,7 @@ const captureEditorAdvance = ({
       });
     }
     // 更新椭圆形
-    else if (drawingType === TYPE.ELLIPSE) {
+    else if (drawingType === SHAPE_TYPE.ELLIPSE) {
       // 设置椭圆形左上角坐标
       // 若拖动方向为左上, 则取坐标绝对值, 避免负值
       if (originX > pointer.x) {
@@ -373,7 +423,7 @@ const captureEditorAdvance = ({
       });
     }
     // 更新箭头
-    else if (drawingType === TYPE.ARROW) {
+    else if (drawingType === SHAPE_TYPE.ARROW) {
       const arrowHead = obj;
       const arrowLine = obj.arrowLine;
       const arrowTail = obj.arrowTail;
@@ -387,7 +437,7 @@ const captureEditorAdvance = ({
       // 更新箭头中线: 根据中线长度变化
       const lineStrokeWidth = Arrow.updateLineStrokeWidth({
         coords: { x1, y1, x2, y2 }, 
-        size: getTypeConfig(TYPE.ARROW).size
+        size: getTypeConfig(SHAPE_TYPE.ARROW).size
       });
       arrowLine.set({
         x2,
@@ -398,9 +448,9 @@ const captureEditorAdvance = ({
       // 更新箭头头部: 根据中线长度变化
       const headSize = Arrow.updateHeadSize({
         arrowLine,
-        size: getTypeConfig(TYPE.ARROW).size
+        size: getTypeConfig(SHAPE_TYPE.ARROW).size
       });
-      const headAngle = Arrow.updateHeadAngle(arrowLine, getTypeConfig(TYPE.ARROW).size);
+      const headAngle = Arrow.updateHeadAngle(arrowLine, getTypeConfig(SHAPE_TYPE.ARROW).size);
       arrowHead.set({
         top: y2,
         left: x2,
@@ -410,7 +460,7 @@ const captureEditorAdvance = ({
       });
 
       // 更新箭头尾部: 根据中线描边变化
-      const tailRadius = Arrow.updateTailRadius(lineStrokeWidth, getTypeConfig(TYPE.ARROW).size);
+      const tailRadius = Arrow.updateTailRadius(lineStrokeWidth, getTypeConfig(SHAPE_TYPE.ARROW).size);
       arrowTail.set({
         radius: tailRadius,
       });
@@ -427,6 +477,7 @@ const captureEditorAdvance = ({
   // 鼠标抬起事件
   function onMouseUp(e) {
     console.log('onMouseUp');
+    const activeObj = canvas.getActiveObject();
 
     if (!isMouseDown) {
       return;
@@ -439,8 +490,17 @@ const captureEditorAdvance = ({
 
     // 若当前激活对象为箭头中线, 则转而激活关联的箭头头部, 使其层级恢复至箭头头部和尾部之下, 
     // 避免头部和尾部部分被遮蔽, 影响拖动交互
-    if (canvas.getActiveObject()?.arrowPart === 'arrowLine') {
-      canvas.setActiveObject(canvas.getActiveObject().arrowHead);
+    if (activeObj?.arrowPart === 'arrowLine') {
+      canvas.setActiveObject(activeObj.arrowHead);
+    }
+
+    // 根据当前绘制对象, 显示对应的配置工具框
+    if (activeObj?.__TYPE__) {
+      setDrawingTool(
+        document.querySelector(`[data-type="${activeObj.__TYPE__}"]`),
+        { setType, show }, 
+        SHAPE_TYPE[activeObj.__TYPE__]
+      );
     }
     
     isMouseDown = false;
@@ -452,7 +512,7 @@ const captureEditorAdvance = ({
   }
 
   return {
-    TYPE,
+    getCanvas,
     setType,
     getType,
     setTypeConfig,
@@ -467,4 +527,7 @@ const captureEditorAdvance = ({
   }
 }
 
-module.exports = captureEditorAdvance
+module.exports = {
+  captureEditorAdvance,
+  setDrawingTool,
+}

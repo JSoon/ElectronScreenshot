@@ -3,10 +3,10 @@
  */
 const path = require('path')
 const { ipcRenderer, clipboard, nativeImage } = require('electron')
-const { IPC_CHANNELS } = require('./enums')
+const { IPC_CHANNELS, SHAPE_TYPE } = require('./enums')
 const { getScreenshot } = require('./desktop-capturer')
 const { ScreenshotEditor, EDITOR_EVENTS } = require('./screenshot-editor')
-const captureEditorAdvance = require('./screenshot-editor-advance')
+const { captureEditorAdvance, setDrawingTool } = require('./screenshot-editor-advance')
 
 // 截屏音
 const audio = new Audio()
@@ -295,13 +295,13 @@ getScreenshot(async (imgSrc) => {
         e.target.classList.add('active')
         if (type === 'ARROW') {
           const size = e.target?.dataset?.size
-          fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
+          fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
             size,
           })
         }
         else {
           // 设置描边宽度
-          fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
+          fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
             strokeWidth: Number(strokeWidth)
           })
         }
@@ -315,13 +315,13 @@ getScreenshot(async (imgSrc) => {
         }
         e.target.classList.add('active')
         if (type === 'ARROW') {
-          fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
+          fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
             color: strokeColor,
           })
         }
         else {
           // 设置描边颜色
-          fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
+          fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
             stroke: strokeColor,
           })
         }
@@ -329,73 +329,19 @@ getScreenshot(async (imgSrc) => {
     }, false)
   })
 
-  // 工具设置位置调整
-  function updateToolbarSettingsPosition(settings) {
-    // 设置默认样式
-    settings.style.top = '100%'
-    settings.style.left = '-10px'
-    settings.style.marginTop = '20px'
-
-    const { width: screenWidth, height: screenHeight } = window.screen
-    const { right, bottom } = settings.getBoundingClientRect()
-
-    // 调整右侧超出视窗宽度
-    if (right > screenWidth) {
-      settings.style.left = `-${right - screenWidth}px`
-    }
-
-    // 调整底部超出视窗范围
-    if (bottom > screenHeight) {
-      settings.style.top = 'auto'
-      settings.style.bottom = '100%'
-      settings.style.marginTop = '0'
-      settings.style.marginBottom = '20px'
-    }
-  }
-
   // 矩形工具
   J_SelectionRect.addEventListener('click', e => {
-    // 隐藏原始截屏选区
-    J_SelectionCanvas.style.display = 'none'
-    // 隐藏所有工具设置, 显示当前工具设置
-    J_ToolbarItemSettings.forEach(s => s.style.display = 'none')
-    const settings = e.currentTarget.querySelector('.J_ToolbarItemSettings')
-    settings.style.display = 'flex'
-    updateToolbarSettingsPosition(settings)
-    // 设置当前工具类型
-    fabricCapture.setType(fabricCapture.TYPE.RECT)
-    // 显示编辑画布
-    fabricCapture.show()
+    setDrawingTool(document.querySelector('[data-type="RECT"]'), fabricCapture, SHAPE_TYPE.RECT, true)
   })
 
   // 椭圆工具
   J_SelectionEllipse.addEventListener('click', e => {
-    // 隐藏原始截屏选区
-    J_SelectionCanvas.style.display = 'none'
-    // 隐藏所有工具设置, 显示当前工具设置
-    J_ToolbarItemSettings.forEach(s => s.style.display = 'none')
-    const settings = e.currentTarget.querySelector('.J_ToolbarItemSettings')
-    settings.style.display = 'flex'
-    updateToolbarSettingsPosition(settings)
-    // 设置当前工具类型
-    fabricCapture.setType(fabricCapture.TYPE.ELLIPSE)
-    // 显示编辑画布
-    fabricCapture.show()
+    setDrawingTool(document.querySelector('[data-type="ELLIPSE"]'), fabricCapture, SHAPE_TYPE.ELLIPSE, true)
   })
 
   // 箭头工具
   J_SelectionArrow.addEventListener('click', e => {
-    // 隐藏原始截屏选区
-    J_SelectionCanvas.style.display = 'none'
-    // 隐藏所有工具设置, 显示当前工具设置
-    J_ToolbarItemSettings.forEach(s => s.style.display = 'none')
-    const settings = e.currentTarget.querySelector('.J_ToolbarItemSettings')
-    settings.style.display = 'flex'
-    updateToolbarSettingsPosition(settings)
-    // 设置当前工具类型
-    fabricCapture.setType(fabricCapture.TYPE.ARROW)
-    // 显示编辑画布
-    fabricCapture.show()
+    setDrawingTool(document.querySelector('[data-type="ARROW"]'), fabricCapture, SHAPE_TYPE.ARROW, true)
   })
 
   // 选区重置
