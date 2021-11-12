@@ -264,8 +264,8 @@ getScreenshot(async (imgSrc) => {
   J_StrokeWidth.forEach(wrapper => {
     wrapper.querySelectorAll('span').forEach((ele) => {
       const { width = '' } = ele.dataset || {}
-      ele.style.width = `${width}px`
-      ele.style.height = `${width}px`
+      ele.style.width = `${Number(width) + 2}px`
+      ele.style.height = `${Number(width) + 2}px`
     })
   })
   J_StrokeColor.forEach(wrapper => {
@@ -293,10 +293,18 @@ getScreenshot(async (imgSrc) => {
           item.classList.remove('active')
         }
         e.target.classList.add('active')
-        // 设置描边宽度
-        fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
-          strokeWidth: Number(strokeWidth)
-        })
+        if (type === 'ARROW') {
+          const size = e.target?.dataset?.size
+          fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
+            size,
+          })
+        }
+        else {
+          // 设置描边宽度
+          fabricCapture.setTypeConfig(fabricCapture.TYPE[type], {
+            strokeWidth: Number(strokeWidth)
+          })
+        }
       }
   
       if (strokeColor) {
