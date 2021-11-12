@@ -41,6 +41,7 @@ function updateToolbarSettingsPosition(settings) {
 
 // 设置当前绘制工具框
 const setDrawingTool = (settings, { setType, show, getCanvas }, type, discardActiveObject = false) => {
+  const canvas = getCanvas()
   // 隐藏原始截屏选区
   J_SelectionCanvas.style.display = 'none'
   // 隐藏所有工具设置, 显示当前工具设置
@@ -53,7 +54,6 @@ const setDrawingTool = (settings, { setType, show, getCanvas }, type, discardAct
   show()
   // 是否取消当前激活对象
   if (discardActiveObject) {
-    const canvas = getCanvas()
     canvas?.discardActiveObject()
     canvas?.renderAll()
   }
@@ -98,7 +98,10 @@ const captureEditorAdvance = ({
       // 尺寸: sm, md, lg
       size: 'sm',
     },
-    [SHAPE_TYPE.BRUSH]: {},
+    [SHAPE_TYPE.BRUSH]: {
+      stroke: 'red',
+      strokeWidth: 2,
+    },
     [SHAPE_TYPE.TEXT]: {},
   }
   
@@ -116,12 +119,20 @@ const captureEditorAdvance = ({
 
   // 更新绘制相关配置
   const setTypeConfig = (type, config = {}) => {
-    // 若非箭头工具, 则设置单个激活对象配置
-    if (type !== SHAPE_TYPE.ARROW) {
-      canvas.getActiveObject()?.set(config);
+    console.log('更新配置', type, drawingConfig[type]);
+
+    // 更新默认配置
+    const newConfig = Object.assign(drawingConfig[type], config);
+    // 更新画笔默认配置
+    if (type === SHAPE_TYPE.BRUSH) {
+      canvas.freeDrawingBrush.color = newConfig.stroke;
+      canvas.freeDrawingBrush.width = newConfig.strokeWidth;
     }
+
+    console.log('最新默认配置', type, drawingConfig[type]);
+
     // 若是箭头工具, 则分别设置头部, 中线, 尾部配置
-    else if (type === SHAPE_TYPE.ARROW) {
+    if (type === SHAPE_TYPE.ARROW) {
       const arrowPart = canvas.getActiveObject();
       // 若存在选中箭头, 则更新箭头配置
       if (arrowPart) {
@@ -149,7 +160,7 @@ const captureEditorAdvance = ({
         const { 
           size = arrowConfig.size, 
           color = arrowConfig.color,
-        } = config;
+        } = newConfig;
         const arrowHeadSize = Arrow.updateHeadSize({ 
           arrowLine,
           size,
@@ -175,11 +186,11 @@ const captureEditorAdvance = ({
         });
       }
     }
+    // 若是其他工具
+    else {
+      canvas.getActiveObject()?.set(newConfig);
+    }
     
-    // 更新默认配置
-    Object.assign(drawingConfig[type], config);
-
-    console.log('更新默认配置', drawingConfig[type]);
     canvas.renderAll();
   }
   const getTypeConfig = (type) => drawingConfig[type]
@@ -220,6 +231,10 @@ const captureEditorAdvance = ({
 
     // 更新画布
     canvas = fabricCanvas
+
+    // 初始化画笔模式配置
+    canvas.freeDrawingBrush.color = drawingConfig[SHAPE_TYPE.BRUSH].stroke;
+    canvas.freeDrawingBrush.width = drawingConfig[SHAPE_TYPE.BRUSH].strokeWidth;
 
     // 绑定画布事件
     bindEvents()
@@ -273,6 +288,7 @@ const captureEditorAdvance = ({
   // 事件绑定
   function bindEvents () {
     canvas.on('selection:created', onSelectionCreated)
+    canvas.on('mouse:down:before', onMouseDownBefore)
     canvas.on('mouse:down', onMouseDown)
     canvas.on('mouse:move', onMouseMove)
     canvas.on('mouse:up', onMouseUp)
@@ -281,6 +297,7 @@ const captureEditorAdvance = ({
   // 事件解绑
   function unbindEvents () {
     canvas.off('selection:created', onSelectionCreated)
+    canvas.off('mouse:down:before', onMouseDownBefore)
     canvas.off('mouse:down', onMouseDown)
     canvas.off('mouse:move', onMouseMove)
     canvas.off('mouse:up', onMouseUp)
@@ -297,6 +314,21 @@ const captureEditorAdvance = ({
     }
   }
 
+  // 鼠标按下前事件: 用于处理形状创建前逻辑
+  function onMouseDownBefore(e) {
+    // 形状创建前若当前是画笔工具
+    if (drawingType === SHAPE_TYPE.BRUSH) {
+      // 若点击在图形上, 则关闭画笔
+      if (e.target) {
+        canvas.isDrawingMode = false;
+      }
+      // 否则, 则开启画笔
+      else {
+        canvas.isDrawingMode = true;
+      }
+    }
+  }
+
   // 鼠标按下事件
   function onMouseDown(e) {
     console.log('onMouseDown');
@@ -309,7 +341,7 @@ const captureEditorAdvance = ({
     }
     // 若点击在空白处, 则绑定鼠标移动事件
     else {
-      canvas.on('mouse:move', onMouseMove)
+      canvas.on('mouse:move', onMouseMove);
     }
 
   }
@@ -470,7 +502,7 @@ const captureEditorAdvance = ({
       arrowTail.setCoords();
     }
     
-    obj.setCoords();
+    obj?.setCoords();
     canvas.renderAll();
   }
 
@@ -495,10 +527,17 @@ const captureEditorAdvance = ({
     }
 
     // 根据当前绘制对象, 显示对应的配置工具框
-    if (activeObj?.__TYPE__) {
+    if (activeObj?.type === 'path') {
+      setDrawingTool(
+        document.querySelector(`[data-type="BRUSH"]`),
+        { setType, show, getCanvas },
+        SHAPE_TYPE.BRUSH
+      );
+    }
+    else if (activeObj?.__TYPE__) {
       setDrawingTool(
         document.querySelector(`[data-type="${activeObj.__TYPE__}"]`),
-        { setType, show }, 
+        { setType, show, getCanvas },
         SHAPE_TYPE[activeObj.__TYPE__]
       );
     }

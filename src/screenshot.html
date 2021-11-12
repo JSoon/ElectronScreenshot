@@ -257,8 +257,8 @@
   <!-- 选区工具条 -->
   <div id="J_SelectionToolbar" class="selection-toolbar">
     <!-- 矩形工具 -->
-    <div id="J_SelectionRect" class="selection-toolbar-item">
-      <i class="iconfont">矩形</i>
+    <div class="selection-toolbar-item">
+      <i id="J_SelectionRect" class="iconfont">矩形</i>
       <div class="toolbar-item-settings J_ToolbarItemSettings" data-type="RECT">
         <div class="stroke-width J_StrokeWidth">
           <span class="active" data-width="4"></span>
@@ -276,8 +276,8 @@
       </div>
     </div>
     <!-- 椭圆工具 -->
-    <div id="J_SelectionEllipse" class="selection-toolbar-item">
-      <i class="iconfont">椭圆</i>
+    <div class="selection-toolbar-item">
+      <i id="J_SelectionEllipse" class="iconfont">椭圆</i>
       <div class="toolbar-item-settings J_ToolbarItemSettings" data-type="ELLIPSE">
         <div class="stroke-width J_StrokeWidth">
           <span class="active" data-width="4"></span>
@@ -295,13 +295,32 @@
       </div>
     </div>
     <!-- 箭头工具 -->
-    <div id="J_SelectionArrow" class="selection-toolbar-item">
-      <i class="iconfont">箭头</i>
+    <div class="selection-toolbar-item">
+      <i id="J_SelectionArrow" class="iconfont">箭头</i>
       <div class="toolbar-item-settings J_ToolbarItemSettings" data-type="ARROW">
         <div class="stroke-width J_StrokeWidth">
           <span class="active" data-width="4" data-size="sm"></span>
           <span data-width="8" data-size="md"></span>
           <span data-width="14" data-size="lg"></span>
+        </div>
+        <div class="stroke-color J_StrokeColor">
+          <span class="active" data-color="red"></span>
+          <span data-color="dodgerblue"></span>
+          <span data-color="limegreen"></span>
+          <span data-color="gold"></span>
+          <span data-color="gray"></span>
+          <span data-color="white"></span>
+        </div>
+      </div>
+    </div>
+    <!-- 画笔工具 -->
+    <div class="selection-toolbar-item">
+      <i id="J_SelectionBrush" class="iconfont">画笔</i>
+      <div class="toolbar-item-settings J_ToolbarItemSettings" data-type="BRUSH">
+        <div class="stroke-width J_StrokeWidth">
+          <span class="active" data-width="4"></span>
+          <span data-width="8"></span>
+          <span data-width="14"></span>
         </div>
         <div class="stroke-color J_StrokeColor">
           <span class="active" data-color="red"></span>

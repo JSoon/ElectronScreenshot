@@ -25,6 +25,7 @@ const J_StrokeColor = document.querySelectorAll('.J_StrokeColor')
 const J_SelectionRect = document.querySelector('#J_SelectionRect')
 const J_SelectionEllipse = document.querySelector('#J_SelectionEllipse')
 const J_SelectionArrow = document.querySelector('#J_SelectionArrow')
+const J_SelectionBrush = document.querySelector('#J_SelectionBrush')
 const J_SelectionReset = document.querySelector('#J_SelectionReset')
 const J_SelectionDownload = document.querySelector('#J_SelectionDownload')
 const J_SelectionCancel = document.querySelector('#J_SelectionCancel')
@@ -279,14 +280,14 @@ getScreenshot(async (imgSrc) => {
   J_ToolbarItemSettings.forEach(settings => {
     settings.addEventListener('click', e => {
       const type = e.currentTarget?.dataset?.type
-      const strokeWidth = e.target?.dataset?.width
-      const strokeColor = e.target?.dataset?.color
+      const width = e.target?.dataset?.width
+      const color = e.target?.dataset?.color
 
       if (!type) {
         return
       }
   
-      if (strokeWidth) {
+      if (width) {
         // 设置高亮
         const settings = e.target.parentElement.children
         for (const item of settings) {
@@ -299,15 +300,20 @@ getScreenshot(async (imgSrc) => {
             size,
           })
         }
+        else if (type === 'BRUSH') {
+          fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
+            strokeWidth: Number(width)
+          })
+        }
         else {
           // 设置描边宽度
           fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
-            strokeWidth: Number(strokeWidth)
+            strokeWidth: Number(width)
           })
         }
       }
   
-      if (strokeColor) {
+      if (color) {
         // 设置高亮
         const settings = e.target.parentElement.children
         for (const item of settings) {
@@ -316,13 +322,18 @@ getScreenshot(async (imgSrc) => {
         e.target.classList.add('active')
         if (type === 'ARROW') {
           fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
-            color: strokeColor,
+            color,
+          })
+        }
+        else if (type === 'BRUSH') {
+          fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
+            stroke: color,
           })
         }
         else {
           // 设置描边颜色
           fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
-            stroke: strokeColor,
+            stroke: color,
           })
         }
       }
@@ -342,6 +353,11 @@ getScreenshot(async (imgSrc) => {
   // 箭头工具
   J_SelectionArrow.addEventListener('click', e => {
     setDrawingTool(document.querySelector('[data-type="ARROW"]'), fabricCapture, SHAPE_TYPE.ARROW, true)
+  })
+
+  // 画笔工具
+  J_SelectionBrush.addEventListener('click', e => {
+    setDrawingTool(document.querySelector('[data-type="BRUSH"]'), fabricCapture, SHAPE_TYPE.BRUSH, true)
   })
 
   // 选区重置
