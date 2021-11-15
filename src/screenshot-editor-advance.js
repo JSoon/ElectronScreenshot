@@ -102,7 +102,11 @@ const captureEditorAdvance = ({
       stroke: 'red',
       strokeWidth: 2,
     },
-    [SHAPE_TYPE.TEXT]: {},
+    [SHAPE_TYPE.TEXT]: {
+      color: 'red',
+      // 尺寸: 18, 24, 30
+      size: 24,
+    },
   }
   
   // 绘制事件相关变量
@@ -110,6 +114,10 @@ const captureEditorAdvance = ({
   let isDrawingCreated = false;
   let originX = 0;
   let originY = 0;
+  // 当前文本对象编辑状态
+  let textInEditing = false;
+  // 对象总层级
+  let zIndex = 0;
 
   // 设置/获取绘制类型
   const setType = (type) => {
@@ -119,7 +127,7 @@ const captureEditorAdvance = ({
 
   // 更新绘制相关配置
   const setTypeConfig = (type, config = {}) => {
-    console.log('更新配置', type, drawingConfig[type]);
+    console.log('更新配置', type, config);
 
     // 更新默认配置
     const newConfig = Object.assign(drawingConfig[type], config);
@@ -186,6 +194,13 @@ const captureEditorAdvance = ({
         });
       }
     }
+    // 文本工具
+    else if (type === SHAPE_TYPE.TEXT) {
+      canvas.getActiveObject()?.set({
+        fill: newConfig.color,
+        fontSize: newConfig.size,
+      });
+    }
     // 若是其他工具
     else {
       canvas.getActiveObject()?.set(newConfig);
@@ -227,6 +242,8 @@ const captureEditorAdvance = ({
       // 允许任意比例缩放
       // https://github.com/fabricjs/fabric.js/issues/6134
       uniformScaling: false,
+      // 禁用鼠标框选
+      selection: false,
     });
 
     // 更新画布
@@ -288,6 +305,7 @@ const captureEditorAdvance = ({
   // 事件绑定
   function bindEvents () {
     canvas.on('selection:created', onSelectionCreated)
+    canvas.on('object:modified', onObjectModified)
     canvas.on('mouse:down:before', onMouseDownBefore)
     canvas.on('mouse:down', onMouseDown)
     canvas.on('mouse:move', onMouseMove)
@@ -297,6 +315,7 @@ const captureEditorAdvance = ({
   // 事件解绑
   function unbindEvents () {
     canvas.off('selection:created', onSelectionCreated)
+    canvas.off('object:modified', onObjectModified)
     canvas.off('mouse:down:before', onMouseDownBefore)
     canvas.off('mouse:down', onMouseDown)
     canvas.off('mouse:move', onMouseMove)
@@ -314,9 +333,16 @@ const captureEditorAdvance = ({
     }
   }
 
+  // 对象修改事件
+  function onObjectModified (e) {
+    e.target.moveTo(++zIndex);
+  }
+
   // 鼠标按下前事件: 用于处理形状创建前逻辑
   function onMouseDownBefore(e) {
-    // 形状创建前若当前是画笔工具
+    console.log('onMouseDownBefore');
+
+    // 画笔工具
     if (drawingType === SHAPE_TYPE.BRUSH) {
       // 若点击在图形上, 则关闭画笔
       if (e.target) {
@@ -325,6 +351,19 @@ const captureEditorAdvance = ({
       // 否则, 则开启画笔
       else {
         canvas.isDrawingMode = true;
+      }
+    }
+    if (drawingType === SHAPE_TYPE.TEXT) {
+      // 创建文本前, 判断当前是否有文本对象处于编辑状态, 从而决定是否新创建文本
+      if (!e.target) {
+        canvas.getObjects('i-text').some(itext => {
+          console.log('itext.isEditing', itext.isEditing);
+          if (itext.isEditing) {
+            textInEditing = true;
+            return true;
+          }
+          return false;
+        });
       }
     }
   }
@@ -341,9 +380,45 @@ const captureEditorAdvance = ({
     }
     // 若点击在空白处, 则绑定鼠标移动事件
     else {
+      // 若是创建文本, 则不监听move事件
+      if (drawingType === SHAPE_TYPE.TEXT) {
+        if (!textInEditing) {
+          createText(e);
+        }
+        textInEditing = false;
+        return;
+      }
       canvas.on('mouse:move', onMouseMove);
     }
 
+  }
+
+  // 鼠标点击事件
+  function createText(e) {
+    // 文本工具: 点击鼠标立即创建
+    const pointer = canvas.getPointer(e);
+    // 公共配置
+    const commonOpts = {
+      originX: 'left',
+      originY: 'top',
+      left: pointer.x,
+      top: pointer.y,
+    };
+    const { color, size } = drawingConfig[SHAPE_TYPE.TEXT];
+    const objOpts = {
+      ...commonOpts,
+      fill: color,
+      fontSize: size,
+      lockScalingX: true,
+      lockScalingY: true,
+      textBackgroundColor: 'rgba(255, 255, 255, 0.01)',
+    };
+    const textObj = new fabric.IText('', objOpts);
+    textObj.__TYPE__ = 'TEXT';
+    canvas.add(textObj);
+    // NOTE: 必须在添加到画布后再进入编辑模式, 否则会导致输入事件失效
+    textObj.enterEditing();
+    canvas.setActiveObject(textObj, e);
   }
 
   // 鼠标移动事件
@@ -541,6 +616,9 @@ const captureEditorAdvance = ({
         SHAPE_TYPE[activeObj.__TYPE__]
       );
     }
+
+    // 当前选中对象层级递增
+    e.target?.moveTo(++zIndex);
     
     isMouseDown = false;
     isDrawingCreated = false;

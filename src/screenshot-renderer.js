@@ -26,6 +26,8 @@ const J_SelectionRect = document.querySelector('#J_SelectionRect')
 const J_SelectionEllipse = document.querySelector('#J_SelectionEllipse')
 const J_SelectionArrow = document.querySelector('#J_SelectionArrow')
 const J_SelectionBrush = document.querySelector('#J_SelectionBrush')
+const J_SelectionText = document.querySelector('#J_SelectionText')
+const J_FontSizeSelect = document.querySelector('#J_FontSizeSelect')
 const J_SelectionReset = document.querySelector('#J_SelectionReset')
 const J_SelectionDownload = document.querySelector('#J_SelectionDownload')
 const J_SelectionCancel = document.querySelector('#J_SelectionCancel')
@@ -330,6 +332,11 @@ getScreenshot(async (imgSrc) => {
             stroke: color,
           })
         }
+        else if (type === 'TEXT') {
+          fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
+            color,
+          })
+        }
         else {
           // 设置描边颜色
           fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
@@ -339,6 +346,13 @@ getScreenshot(async (imgSrc) => {
       }
     }, false)
   })
+
+  // 字号改变
+  J_FontSizeSelect.addEventListener('change', e => {
+    fabricCapture.setTypeConfig(SHAPE_TYPE.TEXT, {
+      size: Number(e.target.value),
+    })
+  }, false)
 
   // 矩形工具
   J_SelectionRect.addEventListener('click', e => {
@@ -358,6 +372,11 @@ getScreenshot(async (imgSrc) => {
   // 画笔工具
   J_SelectionBrush.addEventListener('click', e => {
     setDrawingTool(document.querySelector('[data-type="BRUSH"]'), fabricCapture, SHAPE_TYPE.BRUSH, true)
+  })
+
+  // 文字工具
+  J_SelectionText.addEventListener('click', e => {
+    setDrawingTool(document.querySelector('[data-type="TEXT"]'), fabricCapture, SHAPE_TYPE.TEXT, true)
   })
 
   // 选区重置
