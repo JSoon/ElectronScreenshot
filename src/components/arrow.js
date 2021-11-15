@@ -3,6 +3,7 @@
  * 
  * @see {@link http://jsfiddle.net/ug2gskj1/} 参考资料
  */
+
 class Arrow {
   // 画布
   canvas = null;
@@ -313,6 +314,35 @@ class Arrow {
     arrowHead.moveTo(Arrow.arrowHeadIndex);
     arrowLine.moveTo(Arrow.arrowLineIndex);
     arrowTail.moveTo(Arrow.arrowTailIndex);
+  }
+
+  // 根据当前箭头部位, 获取所有箭头部位组合
+  static getArrowGroup (arrowPart) {
+    if (!arrowPart) {
+      return []
+    }
+
+    let arrowHead = null;
+    let arrowLine = null;
+    let arrowTail = null;
+
+    if (!arrowPart.arrowHead) {
+      arrowHead = arrowPart;
+      arrowLine = arrowPart.arrowLine;
+      arrowTail = arrowPart.arrowTail;
+    }
+    if (!arrowPart.arrowLine) {
+      arrowLine = arrowPart;
+      arrowHead = arrowPart.arrowHead;
+      arrowTail = arrowPart.arrowTail;
+    }
+    if (!arrowPart.arrowTail) {
+      arrowTail = arrowPart;
+      arrowHead = arrowPart.arrowHead;
+      arrowLine = arrowPart.arrowLine;
+    }
+
+    return [arrowHead, arrowLine, arrowTail];
   }
 }
 

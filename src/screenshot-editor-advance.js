@@ -104,8 +104,8 @@ const captureEditorAdvance = ({
     },
     [SHAPE_TYPE.TEXT]: {
       color: 'red',
-      // 尺寸: 18, 24, 30
-      size: 24,
+      // 尺寸: 24, 30, 36
+      size: 30,
     },
   }
   
@@ -144,26 +144,8 @@ const captureEditorAdvance = ({
       const arrowPart = canvas.getActiveObject();
       // 若存在选中箭头, 则更新箭头配置
       if (arrowPart) {
-        let arrowHead = null;
-        let arrowLine = null;
-        let arrowTail = null;
-  
-        if (!arrowPart.arrowHead) {
-          arrowHead = arrowPart;
-          arrowLine = arrowPart.arrowLine;
-          arrowTail = arrowPart.arrowTail;
-        }
-        if (!arrowPart.arrowLine) {
-          arrowLine = arrowPart;
-          arrowHead = arrowPart.arrowHead;
-          arrowTail = arrowPart.arrowTail;
-        }
-        if (!arrowPart.arrowTail) {
-          arrowTail = arrowPart;
-          arrowHead = arrowPart.arrowHead;
-          arrowLine = arrowPart.arrowLine;
-        }
-        
+        const [arrowHead, arrowLine, arrowTail] = Arrow.getArrowGroup(arrowPart);
+
         const arrowConfig = getTypeConfig(SHAPE_TYPE.ARROW);
         const { 
           size = arrowConfig.size, 
@@ -289,9 +271,36 @@ const captureEditorAdvance = ({
     unbindEvents()
   }
 
+  // 撤销到上一步
+  const undoCanvas = () => {
+    console.log('before undo', canvas.getObjects());
+    const allObjects = canvas.getObjects();
+    if (!allObjects.length) {
+      return;
+    }
+
+    const lastObj = canvas.getObjects().pop();
+
+    // 移除箭头组合形状
+    if (lastObj.__TYPE__ === 'ARROW') {
+      const [arrowHead, arrowLine, arrowTail] = Arrow.getArrowGroup(lastObj);
+      canvas.remove(arrowHead);
+      canvas.remove(arrowLine);
+      canvas.remove(arrowTail);
+    }
+    // 移除其他单个形状
+    else {
+      canvas.remove(lastObj);
+    }
+
+    canvas.renderAll();
+    console.log('after undo', canvas.getObjects());
+  }
+
   // 清空画布
   const clearCanvas = () => {
     canvas.clear()
+    canvas.renderAll()
     updateCanvas()
   }
 
@@ -335,6 +344,7 @@ const captureEditorAdvance = ({
 
   // 对象修改事件
   function onObjectModified (e) {
+    console.log('onObjectModified');
     e.target.moveTo(++zIndex);
   }
 
@@ -415,6 +425,12 @@ const captureEditorAdvance = ({
     };
     const textObj = new fabric.IText('', objOpts);
     textObj.__TYPE__ = 'TEXT';
+    // 退出编辑模式时, 若文本为空, 则移除该文本
+    textObj.on('editing:exited', () => {
+      if (!textObj.text.trim()) {
+        canvas.remove(textObj);
+      }
+    });
     canvas.add(textObj);
     // NOTE: 必须在添加到画布后再进入编辑模式, 否则会导致输入事件失效
     textObj.enterEditing();
@@ -639,6 +655,7 @@ const captureEditorAdvance = ({
     initCanvas,
     updateCanvas,
     destroyCanvas,
+    undoCanvas,
     clearCanvas,
     getCanvasDataURL,
   }

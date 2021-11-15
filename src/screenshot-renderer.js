@@ -17,7 +17,7 @@ const J_Background = document.querySelector('#J_Background')
 const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas')
 // 选区信息
 const J_SelectionInfo = document.querySelector('#J_SelectionInfo')
-// 选区工具条
+// 选区工具条: 绘制工具
 const J_SelectionToolbar = document.querySelector('#J_SelectionToolbar')
 const J_ToolbarItemSettings = document.querySelectorAll('.J_ToolbarItemSettings')
 const J_StrokeWidth = document.querySelectorAll('.J_StrokeWidth')
@@ -28,6 +28,8 @@ const J_SelectionArrow = document.querySelector('#J_SelectionArrow')
 const J_SelectionBrush = document.querySelector('#J_SelectionBrush')
 const J_SelectionText = document.querySelector('#J_SelectionText')
 const J_FontSizeSelect = document.querySelector('#J_FontSizeSelect')
+// 选区工具条: 操作工具
+const J_SelectionUndo = document.querySelector('#J_SelectionUndo')
 const J_SelectionReset = document.querySelector('#J_SelectionReset')
 const J_SelectionDownload = document.querySelector('#J_SelectionDownload')
 const J_SelectionCancel = document.querySelector('#J_SelectionCancel')
@@ -377,6 +379,11 @@ getScreenshot(async (imgSrc) => {
   // 文字工具
   J_SelectionText.addEventListener('click', e => {
     setDrawingTool(document.querySelector('[data-type="TEXT"]'), fabricCapture, SHAPE_TYPE.TEXT, true)
+  })
+
+  // 撤销到上一步
+  J_SelectionUndo.addEventListener('click', e => {
+    fabricCapture.undoCanvas()
   })
 
   // 选区重置

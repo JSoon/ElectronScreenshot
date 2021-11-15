@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>截屏</title>
 
-  <link rel="stylesheet" href="https://at.alicdn.com/t/font_2726538_0k5kpygnrg3g.css">
+  <link rel="stylesheet" href="https://at.alicdn.com/t/font_2726538_mwso8nz069.css">
   <style>
     * {
       box-sizing: border-box;
@@ -95,6 +95,10 @@
       text-shadow: 0px 2px 0px rgba(0, 0, 0, .12);
     }
 
+    .selection-toolbar .selection-toolbar-item .es-back {
+      font-size: 21px;
+    }
+
     .selection-toolbar .selection-toolbar-item .es-refresh {
       font-size: 21px;
     }
@@ -116,6 +120,7 @@
     .toolbar-item-settings {
       position: absolute;
       display: none;
+      align-items: center;
       padding: 12px 20px;
       border-radius: 4px;
       background-color: rgba(0, 0, 0, .8);
@@ -197,6 +202,19 @@
 
     .toolbar-item-settings .stroke-color .white {
       background-color: white;
+    }
+
+    .toolbar-item-settings .font-size select {
+      width: 60px;
+      margin-right: 5px;
+    }
+
+    /* 分隔符 */
+    .selection-toolbar-seperator {
+      width: 1px;
+      height: 20px;
+      margin: 0 10px;
+      background-color: #ddd;
     }
 
     .cursor-info {
@@ -338,9 +356,9 @@
       <div class="toolbar-item-settings J_ToolbarItemSettings" data-type="TEXT">
         <div class="font-size J_FontSize">
           <select name="fontSizeSelect" id="J_FontSizeSelect">
-            <option value="18">小</option>
-            <option value="24" selected>中</option>
-            <option value="30">大</option>
+            <option value="24">小</option>
+            <option value="30" selected>中</option>
+            <option value="36">大</option>
           </select>
         </div>
         <div class="stroke-color J_StrokeColor">
@@ -352,6 +370,13 @@
           <span data-color="white"></span>
         </div>
       </div>
+    </div>
+
+    <div class="selection-toolbar-seperator"></div>
+
+    <!-- 撤销到上一步 -->
+    <div id="J_SelectionUndo" class="selection-toolbar-item">
+      <i class="iconfont es-back"></i>
     </div>
     <!-- 选区重置 -->
     <div id="J_SelectionReset" class="selection-toolbar-item">
