@@ -260,6 +260,11 @@ getScreenshot(async (imgSrc) => {
   // 点击回车, 保存截屏到剪切板
   window.addEventListener('keypress', e => {
     if (e.code === 'Enter') {
+      console.log('e.target', e.target);
+      // 若回车时对象为文本输入框, 则不截屏
+      if (e.target.hasAttribute('data-fabric-hiddentextarea')) {
+        return
+      }
       selectionCapture()
     }
   })
