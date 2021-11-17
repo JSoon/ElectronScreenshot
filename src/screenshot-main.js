@@ -12,7 +12,7 @@ const {
   dialog
 } = require('electron')
 const { IPC_CHANNELS } = require('./enums')
-const { getCurrentWindow, getCurrentScreen, isMacOS, hideCurrentWindow, closeCurrentWindow } = require('./utils-main')
+const { getCurrentWindow, getCurrentScreen, isMacOS, hideCurrentWindow, closeCurrentWindow, getFilename } = require('./utils-main')
 
 // 所有截屏窗口
 let screenshotWins = []
@@ -182,12 +182,16 @@ const useCapture = (mainWindow) => {
     win.hide()
     
     try {
-      const { filePath, canceled } = await dialog.showSaveDialog({
-        filters: [{
-          name: 'Images',
-          extensions: ['png', 'jpg', 'gif'],
-        }],
-      })
+      const { filePath, canceled } = await dialog.showSaveDialog(
+        mainWindow,
+        {
+          filters: [{
+            name: 'Images',
+            extensions: ['png', 'jpg', 'gif'],
+          }],
+          defaultPath: getFilename()
+        }
+      )
 
       // 取消保存操作
       if (canceled) {

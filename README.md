@@ -10,6 +10,15 @@
 # Chromium   91.0.4472.124
 ```
 
+# Build Environment
+```
+# electron-builder  21.2.0
+```
+
+> 降级为固定版本 21.2.0 是因为无法构建 ia32 架构, 错误信息: exited with code ERR_ELECTRON_BUILDER_CANNOT_EXECUTE
+
+参考资料: https://github.com/electron-userland/electron-builder/issues/4629
+
 # Usage
 
 ```bash

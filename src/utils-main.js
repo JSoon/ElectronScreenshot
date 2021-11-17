@@ -43,6 +43,24 @@ const isCursorInCurrentWindow = () => {
   return x >= winX && x <= winX + width && y >= winY && y <= winY + height
 }
 
+// 生成截图文件名称
+const getFilename = () => {
+  const d = new Date()
+  const year = d.getFullYear().toString()
+  let month = d.getMonth() + 1
+  month = month < 10 ? `0${month}` : month.toString()
+  let day = d.getDate()
+  day = day < 10 ? `0${day}` : day.toString()
+  let hour = d.getHours()
+  hour = hour < 10 ? `0${hour}` : hour.toString()
+  let minute = d.getMinutes()
+  minute = minute < 10 ? `0${minute}` : minute.toString()
+  let second = d.getSeconds()
+  second = second < 10 ? `0${second}` : second.toString()
+  
+  return `HL${year}${month}${day}-${hour}${minute}${second}`
+}
+
 module.exports = {
   isWindows,
   isMacOS,
@@ -50,5 +68,6 @@ module.exports = {
   closeCurrentWindow,
   getCurrentWindow,
   getCurrentScreen,
-  isCursorInCurrentWindow
+  isCursorInCurrentWindow,
+  getFilename
 }
