@@ -5,7 +5,6 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "postinstall": "electron-builder install-app-deps",
     "pack": "electron-builder --dir",
     "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win",
@@ -28,6 +27,7 @@
     "node": "^14.18"
   },
   "dependencies": {
+    "canvas": "^2.6.1",
     "fabric": "^4.5.1"
   },
   "devDependencies": {
@@ -42,6 +42,7 @@
       "buildResources": "build",
       "output": "dist"
     },
+    "npmRebuild": false,
     "win": {
       "target": {
         "target": "nsis",
