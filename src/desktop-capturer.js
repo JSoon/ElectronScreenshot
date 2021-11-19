@@ -24,17 +24,17 @@ const getScreenshot = async (callback) => {
    */
   const handleStream = (stream) => {
     // Create hidden video tag
-    let video = document.createElement('video')
+    const video = document.createElement('video')
+    document.body.appendChild(video)
+    video.srcObject = stream
     video.style.cssText = 'position:absolute; top:-10000px; left:-10000px;'
 
-    let loaded = false
+    // fix: 截屏流转图片黑屏
+    // https://github.com/electron/electron/issues/21063
+    video.play()
+
     // 处理视频流, 绘制视频流到画布, 然后转为图片格式
-    video.onloadedmetadata = () => {
-      if (loaded) {
-        return
-      }
-      loaded = true
-      video.pause()
+    video.onloadedmetadata = (e) => {
 
       // Set video ORIGINAL height (screenshot)
       video.style.height = video.videoHeight + 'px' // videoHeight
@@ -47,10 +47,11 @@ const getScreenshot = async (callback) => {
       let ctx = canvas.getContext('2d')
       // Draw video on canvas
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
       canvas.toBlob((blob) => {
         console.log(blob);
         if (callback) {
-          // Save screenshot to png - base64
+          // Save screenshot to blob URL
           callback(URL.createObjectURL(blob))
         } else {
           // console.log('Need callback!')
@@ -60,17 +61,7 @@ const getScreenshot = async (callback) => {
       'image/jpeg', 0.9)
       // Remove hidden video tag
       video.remove()
-      try {
-        stream.getTracks()[0].stop()
-      } catch (e) {
-        // nothing
-      }
     }
-    video.srcObject = stream
-    // fix: 截屏流转图片黑屏
-    // https://github.com/electron/electron/issues/21063
-    video.play()
-    document.body.appendChild(video)
   }
 
   // 截屏图片流：单屏幕

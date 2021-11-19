@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "canvas": "^2.6.1",
-    "fabric": "^4.5.1"
+    "fabric": "^4.6.0"
   },
   "devDependencies": {
     "electron": "^13.1.7",

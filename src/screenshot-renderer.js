@@ -226,13 +226,14 @@ getScreenshot(async (imgSrc) => {
   })
 
   // 选区截屏
-  const selectionCapture = () => {
+  const selectionCapture = async () => {
     if (!capture.selectRect) {
       return
     }
 
     // 优先获取工具编辑后的图片流, 若没有则获取原始截图数据
     const dataURL = fabricCapture.getCanvasDataURL()
+    const blobURL = URL.createObjectURL(await (await fetch(dataURL)).blob());
 
     // 1. 隐藏截屏窗口
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT_HIDE_CURRENT_WINDOW)
@@ -248,7 +249,10 @@ getScreenshot(async (imgSrc) => {
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT, {
       type: IPC_CHANNELS.SCREENSHOT_COMPLETE,
       screenId: currentScreen.id,
-      data: dataURL,
+      data: {
+        base64: dataURL,
+        blob: blobURL,
+      },
     })
   }
 

@@ -91,7 +91,7 @@ class Screenshot {
       })
 
       // 调试
-      win.webContents.openDevTools()
+      // win.webContents.openDevTools()
 
       return win
     })
@@ -138,7 +138,7 @@ const useCapture = (mainWindow) => {
   ipcMain.on(IPC_CHANNELS.SCREENSHOT, (e, {
     type = IPC_CHANNELS.SCREENSHOT_START,
     screenId,
-    // 截屏图片DataURL数据(base64)
+    // { base64, blob }
     data
   } = {}) => {
 
