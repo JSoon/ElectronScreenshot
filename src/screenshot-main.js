@@ -152,7 +152,6 @@ const useCapture = (mainWindow) => {
       // TODO: 导入主窗口, 向主窗口发送截屏完成事件
       if (mainWindow) {
         mainWindow.webContents.send(IPC_CHANNELS.SCREENSHOT_COMPLETE, {
-          type: IPC_CHANNELS.SCREENSHOT_COMPLETE,
           screenId,
           data
         })
