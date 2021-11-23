@@ -12,6 +12,7 @@ const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas')
 // 选区工具条
 const J_ToolbarItemIcons = document.querySelectorAll('.J_ToolbarItemIcon')
 const J_ToolbarItemSettings = document.querySelectorAll('.J_ToolbarItemSettings')
+const J_SelectionUndo = document.querySelector('#J_SelectionUndo')
 // 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时销毁初始画布
 const J_SelectionEditorWrapper = document.querySelector('#J_SelectionEditorWrapper')
 const J_SelectionEditor = document.querySelector('#J_SelectionEditor')
@@ -30,8 +31,11 @@ function updateToolbarSettingsPosition(settings) {
   const icon = settings.previousElementSibling
   const iconClientRect = icon.getBoundingClientRect()
   const triangles = settings.querySelectorAll('.triangle')
+  const triangleTop = settings.querySelector('.triangle-top')
+  const triangleBottom = settings.querySelector('.triangle-bottom')
   const triangleOffsetX = 5
   triangles.forEach(t => t.style.left = `${iconClientRect.left - left + triangleOffsetX}px`)
+  let iconPosition = '' // 三角垂直方向位置: top / bottom
 
   // 调整右侧超出视窗宽度
   if (right > screenWidth) {
@@ -44,6 +48,26 @@ function updateToolbarSettingsPosition(settings) {
     settings.style.bottom = '100%'
     settings.style.marginTop = '0'
     settings.style.marginBottom = '20px'
+
+    iconPosition = 'bottom'
+    triangleTop.style.display = 'none'
+    triangleBottom.style.display = 'block'
+  }
+  else {
+    iconPosition = 'top'
+    triangleTop.style.display = 'block'
+    triangleBottom.style.display = 'none'
+  }
+}
+
+// 更新撤销工具图标样式
+function updateToolbarUndoStatus (canvas) {
+  const allObjects = canvas.getObjects()
+
+  if (!allObjects.length) {
+    J_SelectionUndo.classList.add('disabled')
+  } else {
+    J_SelectionUndo.classList.remove('disabled')
   }
 }
 
@@ -304,6 +328,8 @@ const captureEditorAdvance = ({
       canvas.remove(lastObj);
     }
 
+    updateToolbarUndoStatus(canvas);
+    
     canvas.renderAll();
     console.log('after undo', canvas.getObjects());
   }
@@ -653,6 +679,8 @@ const captureEditorAdvance = ({
     
     isMouseDown = false;
     isDrawingCreated = false;
+
+    updateToolbarUndoStatus(canvas);
     
     canvas.isDrawingMode = false;
     canvas.renderAll();

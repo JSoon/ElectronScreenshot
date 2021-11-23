@@ -99,6 +99,12 @@
       text-shadow: 0px 2px 0px rgba(0, 0, 0, .12);
     }
 
+    .selection-toolbar .selection-toolbar-item.disabled .iconfont-screenshot {
+      color: #ccc;
+      transform: none;
+      text-shadow: none;
+    }
+
     .toolbar-item-settings {
       position: absolute;
       display: none;
@@ -110,23 +116,29 @@
 
     .toolbar-item-settings .triangle {
       position: absolute;
+      display: none;
       width: 0;
       height: 0;
       border-style: solid;
+      border-color: rgba(0, 0, 0, .8);
     }
 
     .toolbar-item-settings .triangle-top {
       top: 0;
       transform: translateY(-100%);
-      border-width: 0 5px 8.7px 5px;
-      border-color: transparent transparent #007bff transparent;
+      border-width: 0 5px 6px 5px;
+      border-top-color: transparent;
+      border-right-color: transparent;
+      border-left-color: transparent;
     }
 
     .toolbar-item-settings .triangle-bottom {
       bottom: 0;
       transform: translateY(100%);
-      border-width: 8.7px 5px 0 5px;
-      border-color: #007bff transparent transparent transparent;
+      border-width: 6px 5px 0 5px;
+      border-right-color: transparent;
+      border-bottom-color: transparent;
+      border-left-color: transparent;
     }
 
     .toolbar-item-settings .stroke-width {
@@ -392,7 +404,7 @@
     <div class="selection-toolbar-seperator"></div>
 
     <!-- 撤销到上一步 -->
-    <div id="J_SelectionUndo" class="selection-toolbar-item">
+    <div id="J_SelectionUndo" class="selection-toolbar-item disabled">
       <i class="iconfont-screenshot icon-screenshot-return"></i>
     </div>
     <!-- 选区重置 -->
