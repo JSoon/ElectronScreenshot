@@ -10,6 +10,7 @@ const J_Background = document.querySelector('#J_Background')
 // 选区画布: 初始画布
 const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas')
 // 选区工具条
+const J_ToolbarItemIcons = document.querySelectorAll('.J_ToolbarItemIcon')
 const J_ToolbarItemSettings = document.querySelectorAll('.J_ToolbarItemSettings')
 // 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时销毁初始画布
 const J_SelectionEditorWrapper = document.querySelector('#J_SelectionEditorWrapper')
@@ -23,7 +24,14 @@ function updateToolbarSettingsPosition(settings) {
   settings.style.marginTop = '20px'
 
   const { width: screenWidth, height: screenHeight } = window.screen
-  const { right, bottom } = settings.getBoundingClientRect()
+  const { left, right, bottom } = settings.getBoundingClientRect()
+
+  // 调整三角箭头水平位置, 指向对应的工具图标
+  const icon = settings.previousElementSibling
+  const iconClientRect = icon.getBoundingClientRect()
+  const triangles = settings.querySelectorAll('.triangle')
+  const triangleOffsetX = 5
+  triangles.forEach(t => t.style.left = `${iconClientRect.left - left + triangleOffsetX}px`)
 
   // 调整右侧超出视窗宽度
   if (right > screenWidth) {
@@ -40,10 +48,13 @@ function updateToolbarSettingsPosition(settings) {
 }
 
 // 设置当前绘制工具框
-const setDrawingTool = (settings, { setType, show, getCanvas }, type, discardActiveObject = false) => {
+const setDrawingTool = (icon, settings, { setType, show, getCanvas }, type, discardActiveObject = false) => {
   const canvas = getCanvas()
   // 隐藏原始截屏选区
   J_SelectionCanvas.style.display = 'none'
+  // 高亮当前工具图标
+  J_ToolbarItemIcons.forEach(icon => icon.classList.remove('active'))
+  icon.classList.add('active')
   // 隐藏所有工具设置, 显示当前工具设置
   J_ToolbarItemSettings.forEach(s => s.style.display = 'none')
   settings.style.display = 'flex'
@@ -618,15 +629,19 @@ const captureEditorAdvance = ({
     }
 
     // 根据当前绘制对象, 显示对应的配置工具框
+    // 若是画笔
     if (activeObj?.type === 'path') {
       setDrawingTool(
+        document.querySelector(`[data-icon="BRUSH"]`),
         document.querySelector(`[data-type="BRUSH"]`),
         { setType, show, getCanvas },
         SHAPE_TYPE.BRUSH
       );
     }
+    // 若是其他形状
     else if (activeObj?.__TYPE__) {
       setDrawingTool(
+        document.querySelector(`[data-icon="${activeObj.__TYPE__}"]`),
         document.querySelector(`[data-type="${activeObj.__TYPE__}"]`),
         { setType, show, getCanvas },
         SHAPE_TYPE[activeObj.__TYPE__]

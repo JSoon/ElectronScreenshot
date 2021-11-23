@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>截屏</title>
 
-  <link rel="stylesheet" href="https://at.alicdn.com/t/font_2726538_mwso8nz069.css">
+  <link rel="stylesheet" href="https://at.alicdn.com/t/font_2950820_w45wfnw49zm.css">
   <style>
     * {
       box-sizing: border-box;
@@ -85,37 +85,18 @@
       cursor: default;
     }
 
-    .selection-toolbar .selection-toolbar-item .iconfont {
+    .selection-toolbar .selection-toolbar-item .iconfont-screenshot {
       display: inline-block;
       transition: all .2s;
       word-break: keep-all;
+      font-size: 21px;
     }
 
-    .selection-toolbar .selection-toolbar-item .iconfont:hover {
+    .selection-toolbar .selection-toolbar-item .iconfont-screenshot.active,
+    .selection-toolbar .selection-toolbar-item .iconfont-screenshot:hover {
+      color: #E74F4F;
       transform: translateY(-1px);
       text-shadow: 0px 2px 0px rgba(0, 0, 0, .12);
-    }
-
-    .selection-toolbar .selection-toolbar-item .es-back {
-      font-size: 21px;
-    }
-
-    .selection-toolbar .selection-toolbar-item .es-refresh {
-      font-size: 21px;
-    }
-
-    .selection-toolbar .selection-toolbar-item .es-download {
-      font-size: 22px;
-    }
-
-    .selection-toolbar .selection-toolbar-item .es-close {
-      font-size: 22px;
-      color: #d84c4c;
-    }
-
-    .selection-toolbar .selection-toolbar-item .es-select {
-      font-size: 26px;
-      color: #46b93f;
     }
 
     .toolbar-item-settings {
@@ -125,6 +106,27 @@
       padding: 12px 20px;
       border-radius: 4px;
       background-color: rgba(0, 0, 0, .8);
+    }
+
+    .toolbar-item-settings .triangle {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-style: solid;
+    }
+
+    .toolbar-item-settings .triangle-top {
+      top: 0;
+      transform: translateY(-100%);
+      border-width: 0 5px 8.7px 5px;
+      border-color: transparent transparent #007bff transparent;
+    }
+
+    .toolbar-item-settings .triangle-bottom {
+      bottom: 0;
+      transform: translateY(100%);
+      border-width: 8.7px 5px 0 5px;
+      border-color: #007bff transparent transparent transparent;
     }
 
     .toolbar-item-settings .stroke-width {
@@ -277,8 +279,11 @@
   <div id="J_SelectionToolbar" class="selection-toolbar">
     <!-- 矩形工具 -->
     <div class="selection-toolbar-item">
-      <i id="J_SelectionRect" class="iconfont">矩形</i>
+      <i id="J_SelectionRect" data-icon="RECT"
+        class="J_ToolbarItemIcon iconfont-screenshot icon-screenshot-rectangle"></i>
       <div class="toolbar-item-settings J_ToolbarItemSettings" data-type="RECT">
+        <div class="triangle triangle-top"></div>
+        <div class="triangle triangle-bottom"></div>
         <div class="stroke-width J_StrokeWidth">
           <span class="active" data-width="4"></span>
           <span data-width="8"></span>
@@ -296,8 +301,11 @@
     </div>
     <!-- 椭圆工具 -->
     <div class="selection-toolbar-item">
-      <i id="J_SelectionEllipse" class="iconfont">椭圆</i>
+      <i id="J_SelectionEllipse" data-icon="ELLIPSE"
+        class="J_ToolbarItemIcon iconfont-screenshot icon-screenshot-circular"></i>
       <div class="toolbar-item-settings J_ToolbarItemSettings" data-type="ELLIPSE">
+        <div class="triangle triangle-top"></div>
+        <div class="triangle triangle-bottom"></div>
         <div class="stroke-width J_StrokeWidth">
           <span class="active" data-width="4"></span>
           <span data-width="8"></span>
@@ -315,8 +323,11 @@
     </div>
     <!-- 箭头工具 -->
     <div class="selection-toolbar-item">
-      <i id="J_SelectionArrow" class="iconfont">箭头</i>
+      <i id="J_SelectionArrow" data-icon="ARROW"
+        class="J_ToolbarItemIcon iconfont-screenshot icon-screenshot-point"></i>
       <div class="toolbar-item-settings J_ToolbarItemSettings" data-type="ARROW">
+        <div class="triangle triangle-top"></div>
+        <div class="triangle triangle-bottom"></div>
         <div class="stroke-width J_StrokeWidth">
           <span class="active" data-width="4" data-size="sm"></span>
           <span data-width="8" data-size="md"></span>
@@ -334,8 +345,11 @@
     </div>
     <!-- 画笔工具 -->
     <div class="selection-toolbar-item">
-      <i id="J_SelectionBrush" class="iconfont">画笔</i>
+      <i id="J_SelectionBrush" data-icon="BRUSH"
+        class="J_ToolbarItemIcon iconfont-screenshot icon-screenshot-pencil"></i>
       <div class="toolbar-item-settings J_ToolbarItemSettings" data-type="BRUSH">
+        <div class="triangle triangle-top"></div>
+        <div class="triangle triangle-bottom"></div>
         <div class="stroke-width J_StrokeWidth">
           <span class="active" data-width="4"></span>
           <span data-width="8"></span>
@@ -353,8 +367,10 @@
     </div>
     <!-- 文本工具 -->
     <div class="selection-toolbar-item">
-      <i id="J_SelectionText" class="iconfont">文本</i>
+      <i id="J_SelectionText" data-icon="TEXT" class="J_ToolbarItemIcon iconfont-screenshot icon-screenshot-text"></i>
       <div class="toolbar-item-settings J_ToolbarItemSettings" data-type="TEXT">
+        <div class="triangle triangle-top"></div>
+        <div class="triangle triangle-bottom"></div>
         <div class="font-size J_FontSize">
           <select name="fontSizeSelect" id="J_FontSizeSelect">
             <option value="24">小</option>
@@ -377,23 +393,23 @@
 
     <!-- 撤销到上一步 -->
     <div id="J_SelectionUndo" class="selection-toolbar-item">
-      <i class="iconfont es-back"></i>
+      <i class="iconfont-screenshot icon-screenshot-return"></i>
     </div>
     <!-- 选区重置 -->
-    <div id="J_SelectionReset" class="selection-toolbar-item">
-      <i class="iconfont es-refresh"></i>
-    </div>
+    <!-- <div id="J_SelectionReset" class="selection-toolbar-item">
+      <i class="iconfont-screenshot es-refresh"></i>
+    </div> -->
     <!-- 截图下载 -->
     <div id="J_SelectionDownload" class="selection-toolbar-item">
-      <i class="iconfont es-download"></i>
+      <i class="iconfont-screenshot icon-screenshot-download"></i>
     </div>
     <!-- 取消 -->
     <div id="J_SelectionCancel" class="selection-toolbar-item">
-      <i class="iconfont es-close"></i>
+      <i class="iconfont-screenshot icon-screenshot-del"></i>
     </div>
     <!-- 复制到剪切板 -->
     <div id="J_SelectionConfirm" class="selection-toolbar-item">
-      <i class="iconfont es-select"></i>
+      <i class="iconfont-screenshot icon-screenshot-sure"></i>
     </div>
   </div>
   <!-- 鼠标处信息: 拾色器, 放大器, etc. -->

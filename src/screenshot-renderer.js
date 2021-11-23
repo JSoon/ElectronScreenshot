@@ -367,27 +367,27 @@ getScreenshot(async (imgSrc) => {
 
   // 矩形工具
   J_SelectionRect.addEventListener('click', e => {
-    setDrawingTool(document.querySelector('[data-type="RECT"]'), fabricCapture, SHAPE_TYPE.RECT, true)
+    setDrawingTool(J_SelectionRect, document.querySelector('[data-type="RECT"]'), fabricCapture, SHAPE_TYPE.RECT, true)
   })
 
   // 椭圆工具
   J_SelectionEllipse.addEventListener('click', e => {
-    setDrawingTool(document.querySelector('[data-type="ELLIPSE"]'), fabricCapture, SHAPE_TYPE.ELLIPSE, true)
+    setDrawingTool(J_SelectionEllipse, document.querySelector('[data-type="ELLIPSE"]'), fabricCapture, SHAPE_TYPE.ELLIPSE, true)
   })
 
   // 箭头工具
   J_SelectionArrow.addEventListener('click', e => {
-    setDrawingTool(document.querySelector('[data-type="ARROW"]'), fabricCapture, SHAPE_TYPE.ARROW, true)
+    setDrawingTool(J_SelectionArrow, document.querySelector('[data-type="ARROW"]'), fabricCapture, SHAPE_TYPE.ARROW, true)
   })
 
   // 画笔工具
   J_SelectionBrush.addEventListener('click', e => {
-    setDrawingTool(document.querySelector('[data-type="BRUSH"]'), fabricCapture, SHAPE_TYPE.BRUSH, true)
+    setDrawingTool(J_SelectionBrush, document.querySelector('[data-type="BRUSH"]'), fabricCapture, SHAPE_TYPE.BRUSH, true)
   })
 
   // 文字工具
   J_SelectionText.addEventListener('click', e => {
-    setDrawingTool(document.querySelector('[data-type="TEXT"]'), fabricCapture, SHAPE_TYPE.TEXT, true)
+    setDrawingTool(J_SelectionText, document.querySelector('[data-type="TEXT"]'), fabricCapture, SHAPE_TYPE.TEXT, true)
   })
 
   // 撤销到上一步
@@ -395,10 +395,10 @@ getScreenshot(async (imgSrc) => {
     fabricCapture.undoCanvas()
   })
 
-  // 选区重置
-  J_SelectionReset.addEventListener('click', e => {
-    fabricCapture.clearCanvas()
-  })
+  // 选区重置 (暂不使用该功能)
+  // J_SelectionReset.addEventListener('click', e => {
+  //   fabricCapture.clearCanvas()
+  // })
 
   // 截屏下载
   J_SelectionDownload.addEventListener('click', async e => {

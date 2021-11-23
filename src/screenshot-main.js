@@ -91,7 +91,7 @@ class Screenshot {
       })
 
       // 调试
-      // win.webContents.openDevTools()
+      win.webContents.openDevTools()
 
       return win
     })
