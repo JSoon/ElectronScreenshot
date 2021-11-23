@@ -27,7 +27,6 @@
     "node": "^14.18"
   },
   "dependencies": {
-    "canvas": "^2.6.1",
     "fabric": "^4.6.0"
   },
   "devDependencies": {
@@ -62,10 +61,8 @@
       "uninstallerIcon": "build/icon.ico",
       "installerHeaderIcon": "build/icon.ico",
       "uninstallDisplayName": "${productName}_${env.NODE_ENV}_${version}",
-
       "artifactName": "${productName}_${env.NODE_ENV}_${version}.${ext}",
       "deleteAppDataOnUninstall": false,
-      
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "menuCategory": false,
