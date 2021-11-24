@@ -17,7 +17,9 @@
 # electron-builder  21.2.0
 ```
 
-> 降级为固定版本 21.2.0 是因为无法构建 ia32 架构, 错误信息: exited with code ERR_ELECTRON_BUILDER_CANNOT_EXECUTE
+> 降级为固定版本 21.2.0 是因为在 Mac OS 下可能无法构建 ia32 架构, 错误信息: exited with code ERR_ELECTRON_BUILDER_CANNOT_EXECUTE. 
+> 
+> 若不需要在 Mac OS 下构建 Windows 应用, 则可使用最新版本.
 
 参考资料: https://github.com/electron-userland/electron-builder/issues/4629
 
