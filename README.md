@@ -2,7 +2,7 @@
 
 基于 [Electron](https://www.electronjs.org/) 开发的截屏软件.
 
-![demo](./src/assets/image/demo.png)
+![demo](./src/assets/image/demo.jpg)
 
 # Runtime Environment
 
