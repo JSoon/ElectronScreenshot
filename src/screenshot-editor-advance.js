@@ -459,6 +459,7 @@ const captureEditorAdvance = ({
       lockScalingX: true,
       lockScalingY: true,
       textBackgroundColor: 'rgba(255, 255, 255, 0.01)',
+      padding: 8,
     };
     const textObj = new fabric.IText('', objOpts);
     textObj.__TYPE__ = 'TEXT';
