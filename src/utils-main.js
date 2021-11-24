@@ -58,7 +58,7 @@ const getFilename = () => {
   let second = d.getSeconds()
   second = second < 10 ? `0${second}` : second.toString()
   
-  return `海螺截图${year}${month}${day}_${hour}${minute}${second}`
+  return `海螺截图_${year}${month}${day}_${hour}${minute}${second}`
 }
 
 module.exports = {
