@@ -1,6 +1,8 @@
 # Electron Screenshot
 
-基于 [Electron](https://www.electronjs.org/) 开发的截屏软件
+基于 [Electron](https://www.electronjs.org/) 开发的截屏软件.
+
+![demo](./src/assets/image/demo.png)
 
 # Runtime Environment
 
