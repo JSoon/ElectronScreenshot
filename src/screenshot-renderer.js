@@ -13,6 +13,8 @@ const audio = new Audio()
 audio.src = path.join(__dirname, 'assets/audio/screenshot.mp3')
 // 截屏底图
 const J_Background = document.querySelector('#J_Background')
+// 截屏遮罩层
+const J_SelectionMask = document.querySelector('#J_SelectionMask')
 // 选区画布: 初始画布
 const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas')
 // 选区信息
@@ -53,6 +55,9 @@ document.body.addEventListener('mousedown', e => {
 // 截屏
 getScreenshot(async (imgSrc) => {
   console.log(imgSrc);
+  
+  // 截屏完成后, 显示遮罩层
+  J_SelectionMask.style.display = 'block'
 
   const currentScreen = await ipcRenderer.invoke(IPC_CHANNELS.SCREENSHOT_GET_CURRENT_SCREEN)
   const scaleFactor = currentScreen.scaleFactor

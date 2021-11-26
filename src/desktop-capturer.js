@@ -59,6 +59,7 @@ const getScreenshot = async (callback) => {
       }, 
       // 设置截屏图片格式和质量
       'image/jpeg', 0.9)
+      
       // Remove hidden video tag
       video.remove()
     }
@@ -84,7 +85,10 @@ const getScreenshot = async (callback) => {
     },
   }).then(async sources => {
     // 是否支持display_id, 若不支持, 则说明系统不支持多屏幕
-    const isDisplayIdSupported = sources.some(source => source.display_id)
+    // const isDisplayIdSupported = sources.some(source => source.display_id)
+
+    // TODO: 暂时不支持多屏幕截屏
+    const isDisplayIdSupported = false
     
     try {
       // 若支持，则从视频流构建截屏
