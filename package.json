@@ -41,7 +41,10 @@
       "buildResources": "build",
       "output": "dist"
     },
-    "npmRebuild": false,
+    "npmRebuild": true,
+    "mac": {
+      "identity": null
+    },
     "win": {
       "target": {
         "target": "nsis",
