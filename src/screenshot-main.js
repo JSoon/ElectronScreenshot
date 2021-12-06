@@ -42,10 +42,11 @@ class Screenshot {
         hasShadow: false,
         transparent: true,
         // opacity: 0.7,
+        skipTaskbar: true,
         webPreferences: {
           nodeIntegration: true,
           contextIsolation: false,
-          enableRemoteModule: true
+          enableRemoteModule: true,
         }
       })
 

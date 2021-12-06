@@ -53,8 +53,9 @@ document.body.addEventListener('mousedown', e => {
 }, true)
 
 // 截屏
-getScreenshot(async (imgSrc) => {
+getScreenshot(async (imgSrc, startTime) => {
   console.log(imgSrc);
+  console.log('截屏耗时:', new Date().getTime() - startTime, '毫秒');
   
   // 截屏完成后, 显示遮罩层
   J_SelectionMask.style.display = 'block'

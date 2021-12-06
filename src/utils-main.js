@@ -1,7 +1,7 @@
 /**
  * 主进程工具库
  */
-const { BrowserWindow, screen } = require('electron')
+const { BrowserWindow, screen, dialog } = require('electron')
 const os = require('os')
 
 // 是否是Windows
@@ -30,6 +30,14 @@ const closeCurrentWindow = () => {
 const getCurrentScreen = () => {
   const currentWindow = getCurrentWindow()
   let { x, y } = currentWindow.getBounds()
+  // FIXME: Windows系统下, 若系统任务栏自动隐藏, 则获取到的边界左上角坐标为负, 导致不匹配显示屏的边界坐标
+  x = x < 0 ? 0 : x
+  y = y < 0 ? 0 : y
+
+  // dialog.showMessageBox({
+  //   title: 'screen.getAllDisplays()',
+  //   message: `${screen.getAllDisplays().length}个屏幕, ${JSON.stringify(screen.getAllDisplays())}`
+  // })
   return screen.getAllDisplays()?.filter(d => d.bounds.x === x && d.bounds.y === y)?.[0]
 }
 

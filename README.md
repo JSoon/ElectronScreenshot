@@ -26,14 +26,22 @@
 # Usage
 
 ```bash
-1. 安装
+# 1. 安装
 npm i
 
-2. 运行
+# 2. 运行
 npm run start
 ```
 
 # Build
+
+```bash
+# 打包mac
+npm run dist:mac
+
+# 打包win
+npm run dist:win
+```
 
 构建前请先看[这里](https://zhuanlan.zhihu.com/p/110448415), 解决构建源下载超时的问题.
 

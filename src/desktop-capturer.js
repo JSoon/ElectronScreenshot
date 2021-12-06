@@ -5,6 +5,32 @@
 const { desktopCapturer, ipcRenderer } = require('electron')
 const { IPC_CHANNELS } = require('./enums')
 
+// 图片转objectURL
+const imageToBlob = (imageURL) => {
+  const img = new Image()
+  const c = document.createElement('canvas')
+  const ctx = c.getContext('2d')
+  img.crossOrigin = 'anonymous'
+  img.src = imageURL
+  return new Promise((resolve, reject) => {
+    img.onload = function () {
+      c.width = this.naturalWidth
+      c.height = this.naturalHeight
+      ctx.drawImage(this, 0, 0)
+      c.toBlob((blob) => {
+        // here the image is a blob
+        resolve(blob)
+      },
+      // Only PNG files are supported in clipboard API
+      'image/png',
+      0.75)
+    }
+    img.onerror = function (err) {
+      reject(err)
+    }
+  })
+}
+
 // 获取截屏
 const getScreenshot = async (callback) => {
   // 获取当前屏幕
@@ -66,8 +92,9 @@ const getScreenshot = async (callback) => {
   }
 
   // 截屏图片流：单屏幕
-  const handleDataURL = (dataURL) => {
-    callback?.(dataURL)
+  const handleDataURL = async (dataURL, startTime) => {
+    const blob = await imageToBlob(dataURL)
+    callback?.(URL.createObjectURL(blob), startTime)
   }
 
   const handleError = (e) => {
@@ -77,6 +104,7 @@ const getScreenshot = async (callback) => {
   // 获取桌面数据源
   const currentScreenBounds = currentScreen.bounds;
   const currentScreenScaleFactor = currentScreen.scaleFactor;
+  const startTime = new Date().getTime()
   desktopCapturer.getSources({
     types: ['screen'],
     thumbnailSize: { 
@@ -115,7 +143,7 @@ const getScreenshot = async (callback) => {
         const selectSource = sources[0]?.thumbnail?.toDataURL({
           scaleFactor: currentScreenScaleFactor
         })
-        handleDataURL(selectSource)
+        handleDataURL(selectSource, startTime)
       }
 
       // 恢复鼠标和背景图样式
