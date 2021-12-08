@@ -52,10 +52,10 @@ document.body.addEventListener('mousedown', e => {
   }
 }, true)
 
-// 截屏
+// 开始截屏
 getScreenshot(async (imgSrc, startTime) => {
-  console.log(imgSrc);
-  console.log('截屏耗时:', new Date().getTime() - startTime, '毫秒');
+  // console.log(imgSrc);
+  alert(`截屏耗时: ${new Date().getTime() - startTime} 毫秒`)
   
   // 截屏完成后, 显示遮罩层
   J_SelectionMask.style.display = 'block'
@@ -270,7 +270,7 @@ getScreenshot(async (imgSrc, startTime) => {
   // 点击回车, 保存截屏到剪切板
   window.addEventListener('keypress', e => {
     if (e.code === 'Enter') {
-      console.log('e.target', e.target);
+      // console.log('e.target', e.target);
       // 若回车时对象为文本输入框, 则不截屏
       if (e.target.hasAttribute('data-fabric-hiddentextarea')) {
         return

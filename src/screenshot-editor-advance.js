@@ -162,7 +162,7 @@ const captureEditorAdvance = ({
 
   // 更新绘制相关配置
   const setTypeConfig = (type, config = {}) => {
-    console.log('更新配置', type, config);
+    // console.log('更新配置', type, config);
 
     // 更新默认配置
     const newConfig = Object.assign(drawingConfig[type], config);
@@ -172,7 +172,7 @@ const captureEditorAdvance = ({
       canvas.freeDrawingBrush.width = newConfig.strokeWidth;
     }
 
-    console.log('最新默认配置', type, drawingConfig[type]);
+    // console.log('最新默认配置', type, drawingConfig[type]);
 
     // 若是箭头工具, 则分别设置头部, 中线, 尾部配置
     if (type === SHAPE_TYPE.ARROW) {
@@ -308,7 +308,7 @@ const captureEditorAdvance = ({
 
   // 撤销到上一步
   const undoCanvas = () => {
-    console.log('before undo', canvas.getObjects());
+    // console.log('before undo', canvas.getObjects());
     const allObjects = canvas.getObjects();
     if (!allObjects.length) {
       return;
@@ -331,7 +331,7 @@ const captureEditorAdvance = ({
     updateToolbarUndoStatus(canvas);
     
     canvas.renderAll();
-    console.log('after undo', canvas.getObjects());
+    // console.log('after undo', canvas.getObjects());
   }
 
   // 清空画布
@@ -381,13 +381,13 @@ const captureEditorAdvance = ({
 
   // 对象修改事件
   function onObjectModified (e) {
-    console.log('onObjectModified');
+    // console.log('onObjectModified');
     e.target.moveTo(++zIndex);
   }
 
   // 鼠标按下前事件: 用于处理形状创建前逻辑
   function onMouseDownBefore(e) {
-    console.log('onMouseDownBefore');
+    // console.log('onMouseDownBefore');
 
     // 画笔工具
     if (drawingType === SHAPE_TYPE.BRUSH) {
@@ -404,7 +404,7 @@ const captureEditorAdvance = ({
       // 创建文本前, 判断当前是否有文本对象处于编辑状态, 从而决定是否新创建文本
       if (!e.target) {
         canvas.getObjects('i-text').some(itext => {
-          console.log('itext.isEditing', itext.isEditing);
+          // console.log('itext.isEditing', itext.isEditing);
           if (itext.isEditing) {
             textInEditing = true;
             return true;
@@ -417,7 +417,7 @@ const captureEditorAdvance = ({
 
   // 鼠标按下事件
   function onMouseDown(e) {
-    console.log('onMouseDown');
+    // console.log('onMouseDown');
 
     isMouseDown = true;
     
@@ -477,7 +477,7 @@ const captureEditorAdvance = ({
 
   // 鼠标移动事件
   function onMouseMove(e) {
-    console.log('onMouseMove');
+    // console.log('onMouseMove');
 
     if (!isMouseDown) {
       return;
@@ -540,7 +540,7 @@ const captureEditorAdvance = ({
         canvas.setActiveObject(obj.arrowHead, e);
       }
       
-      console.log('objOpts', objOpts);
+      // console.log('objOpts', objOpts);
       
       canvas.renderAll();
       isDrawingCreated = true;
@@ -637,7 +637,7 @@ const captureEditorAdvance = ({
 
   // 鼠标抬起事件
   function onMouseUp(e) {
-    console.log('onMouseUp');
+    // console.log('onMouseUp');
     const activeObj = canvas.getActiveObject();
 
     if (!isMouseDown) {

@@ -66,7 +66,7 @@ class ScreenshotEditor extends Event {
     this.onMouseUp = this.onMouseUp.bind(this)
 
     this.init().then(() => {
-      console.log('init')
+      // console.log('init')
     })
   }
 
