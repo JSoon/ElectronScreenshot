@@ -28,6 +28,7 @@ const J_SelectionRect = document.querySelector('#J_SelectionRect')
 const J_SelectionEllipse = document.querySelector('#J_SelectionEllipse')
 const J_SelectionArrow = document.querySelector('#J_SelectionArrow')
 const J_SelectionBrush = document.querySelector('#J_SelectionBrush')
+const J_SelectionMosaic = document.querySelector('#J_SelectionMosaic')
 const J_SelectionText = document.querySelector('#J_SelectionText')
 const J_FontSizeSelect = document.querySelector('#J_FontSizeSelect')
 // 选区工具条: 操作工具
@@ -55,7 +56,7 @@ document.body.addEventListener('mousedown', e => {
 // 开始截屏
 getScreenshot(async (imgSrc, startTime) => {
   // console.log(imgSrc);
-  alert(`截屏耗时: ${new Date().getTime() - startTime} 毫秒`)
+  // alert(`截屏耗时: ${new Date().getTime() - startTime} 毫秒`)
   
   // 截屏完成后, 显示遮罩层
   J_SelectionMask.style.display = 'block'
@@ -389,6 +390,11 @@ getScreenshot(async (imgSrc, startTime) => {
   // 画笔工具
   J_SelectionBrush.addEventListener('click', e => {
     setDrawingTool(J_SelectionBrush, document.querySelector('[data-type="BRUSH"]'), fabricCapture, SHAPE_TYPE.BRUSH, true)
+  })
+
+  // 马赛克工具
+  J_SelectionMosaic.addEventListener('click', e => {
+    setDrawingTool(J_SelectionMosaic, document.querySelector('[data-type="MOSAIC"]'), fabricCapture, SHAPE_TYPE.MOSAIC, true)
   })
 
   // 文字工具

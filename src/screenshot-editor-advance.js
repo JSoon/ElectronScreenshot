@@ -13,7 +13,7 @@ const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas')
 const J_ToolbarItemIcons = document.querySelectorAll('.J_ToolbarItemIcon')
 const J_ToolbarItemSettings = document.querySelectorAll('.J_ToolbarItemSettings')
 const J_SelectionUndo = document.querySelector('#J_SelectionUndo')
-// 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时销毁初始画布
+// 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时隐藏初始画布
 const J_SelectionEditorWrapper = document.querySelector('#J_SelectionEditorWrapper')
 const J_SelectionEditor = document.querySelector('#J_SelectionEditor')
 
@@ -440,7 +440,7 @@ const captureEditorAdvance = ({
 
   }
 
-  // 鼠标点击事件
+  // 创建文本
   function createText(e) {
     // 文本工具: 点击鼠标立即创建
     const pointer = canvas.getPointer(e);
@@ -629,6 +629,110 @@ const captureEditorAdvance = ({
       arrowHead.setCoords();
       arrowLine.setCoords();
       arrowTail.setCoords();
+    }
+    // 绘制马赛克
+    else if (drawingType === SHAPE_TYPE.MOSAIC) {
+      const ctx = canvas.getContext()
+      // const ctx = J_SelectionEditor.getContext('2d')
+      const mosaicImageData = getMosaicImageData({
+        imageData: ctx.getImageData(0, 0, canvas.width * scaleFactor, canvas.height * scaleFactor),
+        // 矫正画布缩放导致的坐标位移: (x0, y0) 处实际上获取到的是 (x0 * scaleFactor, y0 * scaleFactor) 位置处的像素
+        x0: pointer.x * scaleFactor,
+        y0: pointer.y * scaleFactor,
+        blocksize: 5 * scaleFactor,
+        radius: 10 * scaleFactor, // 半径为10, 则直径上有10*2/5=4个像素块
+      });
+      
+      // const backgroundImage = canvas.backgroundImage;
+      // console.log(backgroundImage);
+
+      const canvas2 = document.getElementById('J_SelectionCanvas2')
+      canvas2.width = canvas.width * scaleFactor
+      canvas2.height = canvas.height * scaleFactor
+      canvas2.style.width = `${canvas.width}px`
+      canvas2.style.height = `${canvas.height}px`
+      const cctx = canvas2.getContext('2d')
+      
+      cctx.putImageData(mosaicImageData, 0, 0)
+
+      // J_SelectionEditor.getContext('2d').putImageData(mosaicImageData, 0, 0)
+
+      /**
+       * 获取坐标处半径内马赛克图像像素数据
+       * 
+       * @param {object}  options 
+       * @param {array}   options.imageData   画布像素数据
+       * @param {number}  options.x0          圆心 x 轴坐标
+       * @param {number}  options.y0          圆心 y 轴坐标
+       * @param {number}  options.blocksize   马赛克块大小
+       * @param {number}  options.radius      马赛克画笔半径
+       * 
+       * @returns {array} 马赛克像素数据
+       */
+      function getMosaicImageData({ imageData, x0, y0, blocksize = 10 * scaleFactor, radius = 20 * scaleFactor } = {}) {
+        const { data, width, height } = imageData;
+        const xStart = x0 - radius > 0 ? x0 - radius : 0;
+        const xEnd = x0 + radius < width ? x0 + radius : width;
+        const yStart = y0 - radius > 0 ? y0 - radius : 0;
+        const yEnd = y0 + radius < height ? y0 + radius : height;
+
+        let index, i, j, r, g, b, a, _i, _j, _iLen, _jLen;
+        // 高: y轴像素
+        for (i = yStart; i < yEnd; i += blocksize) {
+          // 宽: x轴像素
+          for (j = xStart; j < xEnd; j += blocksize) {
+            // 若像素点不在圆内, 则不绘制马赛克
+            if (!isInCircle({
+              x: j, y: i, x0, y0, radius
+            })) {
+              continue;
+            }
+              
+            // 获取像素点数据
+            index = (i * 4) * width + (j * 4);
+            r = data[index];
+            g = data[index + 1];
+            b = data[index + 2];
+            a = data[index + 3];
+
+            // 获取马赛克块右下角坐标
+            _iLen = Math.min(i + blocksize, yEnd); // y轴最大值
+            _jLen = Math.min(j + blocksize, xEnd); // x轴最大值
+
+            // 设置马赛克块像素数据
+            for (_i = i; _i < _iLen; _i++) {
+              for (_j = j; _j < _jLen; _j++) {
+                index = (_i * 4) * width + (_j * 4);
+                data[index] = r;
+                data[index + 1] = g;
+                data[index + 2] = b;
+                data[index + 3] = a;
+              }
+            }
+          }
+        }
+
+        return imageData;
+      }
+      
+      // 坐标是否在圆内
+      function isInCircle({ x, y, x0, y0, radius } = {}) {
+        return Math.pow(x - x0, 2) + Math.pow(y - y0, 2) <= Math.pow(radius, 2)
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
     
     obj?.setCoords();

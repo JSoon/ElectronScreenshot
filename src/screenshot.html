@@ -284,7 +284,8 @@
   <div id="J_SelectionMask" class="selection-mask"></div>
   <!-- 选区画布: 初始画布 -->
   <canvas id="J_SelectionCanvas" class="selection-canvas"></canvas>
-  <!-- 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时销毁初始画布 -->
+  <canvas id="J_SelectionCanvas2" style="position: absolute; z-index: 1000;"></canvas>
+  <!-- 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时隐藏初始画布 -->
   <div class="selection-editor-wrapper" id="J_SelectionEditorWrapper">
     <canvas id="J_SelectionEditor" class="selection-editor"></canvas>
   </div>
@@ -377,6 +378,20 @@
           <span data-color="gold"></span>
           <span data-color="gray"></span>
           <span data-color="white"></span>
+        </div>
+      </div>
+    </div>
+    <!-- 马赛克工具 -->
+    <div class="selection-toolbar-item">
+      <i id="J_SelectionMosaic" data-icon="MOSAIC"
+        class="J_ToolbarItemIcon iconfont-screenshot icon-screenshot-mosaic"></i>
+      <div class="toolbar-item-settings J_ToolbarItemSettings" data-type="MOSAIC">
+        <div class="triangle triangle-top"></div>
+        <div class="triangle triangle-bottom"></div>
+        <div class="stroke-width J_StrokeWidth">
+          <span class="active" data-width="4"></span>
+          <span data-width="8"></span>
+          <span data-width="14"></span>
         </div>
       </div>
     </div>

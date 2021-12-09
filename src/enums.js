@@ -28,7 +28,8 @@ const SHAPE_TYPE = {
   ELLIPSE: 2, // 椭圆形
   ARROW: 3, // 箭头
   BRUSH: 4, // 画笔
-  TEXT: 5, // 文本
+  MOSAIC: 5, // 马赛克
+  TEXT: 6, // 文本
 }
 
 module.exports = {
