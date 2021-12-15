@@ -282,13 +282,6 @@ getScreenshot(async (imgSrc, startTime) => {
 
   //#region 截屏工具条
   // 初始化截屏工具设置项样式
-  J_StrokeWidth.forEach(wrapper => {
-    wrapper.querySelectorAll('span').forEach((ele) => {
-      const { width = '' } = ele.dataset || {}
-      ele.style.width = `${Number(width) + 2}px`
-      ele.style.height = `${Number(width) + 2}px`
-    })
-  })
   J_StrokeColor.forEach(wrapper => {
     wrapper.querySelectorAll('span').forEach((ele) => {
       const { color = '' } = ele.dataset || {}
@@ -320,7 +313,7 @@ getScreenshot(async (imgSrc, startTime) => {
             size,
           })
         }
-        else if (type === 'BRUSH') {
+        else if (type === 'BRUSH' || type === 'MOSAIC') {
           fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
             strokeWidth: Number(width)
           })

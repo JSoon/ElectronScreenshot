@@ -27,7 +27,8 @@
     "node": "^14.18"
   },
   "dependencies": {
-    "fabric": "^4.6.0"
+    "fabric": "^4.6.0",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "electron": "^13.1.7",
