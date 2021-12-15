@@ -4,7 +4,7 @@
 const fabric = require("fabric").fabric;
 const Arrow = require('./components/arrow');
 const { SHAPE_TYPE } = require('./enums');
-const { history, HistoryType } = require('./screenshot-editor-history');
+const { History, HistoryType } = require('./screenshot-editor-history');
 
 // 截屏底图
 const J_Background = document.querySelector('#J_Background')
@@ -129,6 +129,10 @@ const captureEditorAdvance = ({
 } = {}) => {
   // 画布实例
   let canvas = null;
+  // 历史操作对象
+  let history = null;
+  // 编辑器是否已显示
+  let isShown = false;
 
   // 绘制类型
   let drawingType = null;
@@ -212,7 +216,7 @@ const captureEditorAdvance = ({
       const arrowPart = canvas.getActiveObject();
       // 若存在选中箭头, 则更新箭头配置
       if (arrowPart) {
-        const [arrowHead, arrowLine, arrowTail] = Arrow.getArrowGroup(arrowPart);
+        const [arrowHead, arrowLine, arrowTail] = Arrow.getArrowGroup(arrowPart, canvas);
 
         const arrowConfig = getTypeConfig(SHAPE_TYPE.ARROW);
         const { 
@@ -262,6 +266,14 @@ const captureEditorAdvance = ({
 
   // 显示/隐藏画布
   const show = () => {
+    // 若已显示, 则不进行重复操作
+    if (isShown) {
+      return
+    }
+
+    history.push(HistoryType.Add)
+
+    isShown = true
     capture.disable()
     J_SelectionEditorWrapper.style.display = 'block'
   }
@@ -291,10 +303,13 @@ const captureEditorAdvance = ({
       uniformScaling: false,
       // 禁用鼠标框选
       selection: false,
+      includeDefaultValues: true,
     });
 
-    // 更新画布
+    // 初始化画布
     canvas = fabricCanvas
+    // 初始化历史
+    history = new History(canvas)
 
     // 初始化画笔模式配置
     fabric.PencilBrush.prototype.color = drawingConfig[SHAPE_TYPE.BRUSH].stroke
@@ -326,13 +341,10 @@ const captureEditorAdvance = ({
         }
         normalBg = fabric.util.object.clone(img)
         normalBg.set({
-          // dirty: true,
-          // objectCaching: false,
           evented: false,
           selectable: false,
           hoverCursor: 'default'
         })
-        normalBg.__TYPE__ = 'BACKGROUND'
         // 为马赛克背景图添加马赛克滤镜
         mosaicBg.filters.push(bgPixelateFilter)
         mosaicBg.applyFilters()
@@ -363,31 +375,28 @@ const captureEditorAdvance = ({
 
   // 撤销到上一步
   const undoCanvas = () => {
-    history.pop(canvas)
+    history.pop(() => {
+      // 上一步状态
+      const prevState = history.state[history.state.length - 1]
 
-    // console.log('before undo', canvas.getObjects());
-    // if (isCanvasBlank(canvas)) {
-    //   return;
-    // }
+      canvas.loadFromJSON(
+        prevState.object,
+        () => {
+          updateToolbarUndoStatus(canvas);
 
-    // const lastObj = canvas.getObjects().pop();
+        },
+        (json, object) => {
+          if (object.__TYPE__ === 'ARROW') {
+            console.log('loadFromJSON', json, object);
 
-    // // 移除箭头组合形状
-    // if (lastObj.__TYPE__ === 'ARROW') {
-    //   const [arrowHead, arrowLine, arrowTail] = Arrow.getArrowGroup(lastObj);
-    //   canvas.remove(arrowHead);
-    //   canvas.remove(arrowLine);
-    //   canvas.remove(arrowTail);
-    // }
-    // // 移除其他单个形状
-    // else {
-    //   canvas.remove(lastObj);
-    // }
+            Arrow.bindEvents(object, canvas);
+          }
 
-    updateToolbarUndoStatus(canvas);
-    
-    // canvas.renderAll();
-    // console.log('after undo', canvas.getObjects());
+        }
+      )
+      
+    })
+
   }
 
   // 清空画布
@@ -445,9 +454,9 @@ const captureEditorAdvance = ({
   function onObjectAdded (e) {
     console.log('onObjectAdded', e.target);
     // 图形创建的历史操作添加已在绘制结束阶段进行, 这里仅做画笔/文本的历史操作添加
-    if (!e.target.__TYPE__) {
-      history.push(HistoryType.Add, e.target);
-    }
+    // if (!e.target.__TYPE__) {
+    //   history.push(HistoryType.Add, e.target);
+    // }
   }
 
   // 对象修改事件
@@ -562,6 +571,13 @@ const captureEditorAdvance = ({
       padding: 8,
     };
     const textObj = new fabric.IText('', objOpts);
+    textObj.toObject = (function(toObject) {
+      return function(propertiesToInclude) {
+        return fabric.util.object.extend(toObject.apply(this, [propertiesToInclude]), {
+          __TYPE__: this.__TYPE__
+        });
+      };
+    })(textObj.toObject);
     textObj.__TYPE__ = 'TEXT';
     // 退出编辑模式时, 若文本为空, 则移除该文本
     textObj.on('editing:exited', () => {
@@ -609,6 +625,13 @@ const captureEditorAdvance = ({
           ...drawingConfig[SHAPE_TYPE.RECT],
         };
         obj = new objAPI(objOpts);
+        obj.toObject = (function(toObject) {
+          return function(propertiesToInclude) {
+            return fabric.util.object.extend(toObject.apply(this, [propertiesToInclude]), {
+              __TYPE__: this.__TYPE__
+            });
+          };
+        })(obj.toObject);
         obj.__TYPE__ = 'RECT';
         canvas.add(obj);
         canvas.setActiveObject(obj, e);
@@ -621,6 +644,13 @@ const captureEditorAdvance = ({
           ...drawingConfig[SHAPE_TYPE.ELLIPSE],
         };
         obj = new objAPI(objOpts);
+        obj.toObject = (function(toObject) {
+          return function(propertiesToInclude) {
+            return fabric.util.object.extend(toObject.apply(this, propertiesToInclude), {
+              __TYPE__: this.__TYPE__
+            });
+          };
+        })(obj.toObject);
         obj.__TYPE__ = 'ELLIPSE';
         canvas.add(obj);
         canvas.setActiveObject(obj, e);
@@ -633,9 +663,6 @@ const captureEditorAdvance = ({
           config: drawingConfig[SHAPE_TYPE.ARROW],
         }
         obj = new Arrow(objOpts);
-        obj.arrowLine.__TYPE__ = 'ARROW';
-        obj.arrowTail.__TYPE__ = 'ARROW';
-        obj.arrowHead.__TYPE__ = 'ARROW';
         canvas.add(obj.arrowLine, obj.arrowTail, obj.arrowHead);
         canvas.setActiveObject(obj.arrowHead, e);
       }
@@ -685,9 +712,7 @@ const captureEditorAdvance = ({
     }
     // 更新箭头
     else if (drawingType === SHAPE_TYPE.ARROW) {
-      const arrowHead = obj;
-      const arrowLine = obj.arrowLine;
-      const arrowTail = obj.arrowTail;
+      const [arrowHead, arrowLine, arrowTail] = Arrow.getArrowGroup(obj, canvas);
       
       // 中线端点坐标
       const x1 = originX;
@@ -754,7 +779,8 @@ const captureEditorAdvance = ({
     // 若当前激活对象为箭头中线, 则转而激活关联的箭头头部, 使其层级恢复至箭头头部和尾部之下, 
     // 避免头部和尾部部分被遮蔽, 影响拖动交互
     if (activeObj?.arrowPart === 'arrowLine') {
-      canvas.setActiveObject(activeObj.arrowHead);
+      const [arrowHead] = Arrow.getArrowGroup(activeObj, canvas);
+      canvas.setActiveObject(arrowHead);
     }
 
     // 根据当前绘制对象, 显示对应的配置工具框
