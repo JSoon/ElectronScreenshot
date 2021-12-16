@@ -52,6 +52,8 @@
       z-index: 4;
       position: absolute;
       display: none;
+      background-repeat: no-repeat;
+      background-size: 100%;
     }
 
     .selection-editor {}
@@ -299,8 +301,7 @@
   <div id="J_SelectionMask" class="selection-mask"></div>
   <!-- 选区画布: 初始画布 -->
   <canvas id="J_SelectionCanvas" class="selection-canvas"></canvas>
-  <canvas id="J_SelectionCanvas2" style="position: absolute; z-index: 1000;"></canvas>
-  <!-- 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时隐藏初始画布 -->
+  <!-- 编辑画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时隐藏初始画布 -->
   <div class="selection-editor-wrapper" id="J_SelectionEditorWrapper">
     <canvas id="J_SelectionEditor" class="selection-editor"></canvas>
   </div>

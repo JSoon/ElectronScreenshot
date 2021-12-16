@@ -15,7 +15,7 @@ const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas')
 const J_ToolbarItemIcons = document.querySelectorAll('.J_ToolbarItemIcon')
 const J_ToolbarItemSettings = document.querySelectorAll('.J_ToolbarItemSettings')
 const J_SelectionUndo = document.querySelector('#J_SelectionUndo')
-// 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时隐藏初始画布
+// 编辑画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时隐藏初始画布
 const J_SelectionEditorWrapper = document.querySelector('#J_SelectionEditorWrapper')
 const J_SelectionEditor = document.querySelector('#J_SelectionEditor')
 
@@ -95,8 +95,6 @@ function updateToolbarUndoStatus (history) {
 // 设置当前绘制工具框
 const setDrawingTool = (icon, settings, { setType, show, getCanvas }, type, discardActiveObject = false) => {
   const canvas = getCanvas()
-  // 隐藏原始截屏选区
-  J_SelectionCanvas.style.display = 'none'
   // 高亮当前工具图标
   J_ToolbarItemIcons.forEach(icon => icon.classList.remove('active'))
   icon.classList.add('active')
@@ -272,6 +270,9 @@ const captureEditorAdvance = ({
     // 禁用初始画布操作, 显示编辑画布
     isShown = true
     capture.disable()
+    // 隐藏原始截屏选区 (编辑截屏生成后再隐藏原始截屏, 防止画面闪烁)
+    J_SelectionCanvas.style.display = 'none'
+    // 显示编辑画布
     J_SelectionEditorWrapper.style.display = 'block'
 
     // 添加编辑画布初始化历史记录
@@ -329,15 +330,18 @@ const captureEditorAdvance = ({
     const {
       w, h, x, y, r, b,
     } = capture.selectRect;
+    const captureImage = capture.getImageUrl()
 
     // 更新画布位置
     J_SelectionEditorWrapper.style.left = `${x}px`
     J_SelectionEditorWrapper.style.top = `${y}px`
+    // 更新画布背景图, 防止撤销操作时由于重新绘制编辑画布, 而产生的背景图闪烁
+    J_SelectionEditorWrapper.style.backgroundImage = `url(${captureImage})`
 
     return new Promise((resolve) => {
       // 创建背景图
       new fabric.Image.fromURL(
-        capture.getImageUrl(),
+        captureImage,
         (imgObj) => {
           mosaicBg = fabric.util.object.clone(imgObj)
           
@@ -393,6 +397,7 @@ const captureEditorAdvance = ({
       // 上一步状态
       const prevState = history.state[history.state.length - 1]
 
+      // TODO: 解决从JSON恢复时导致的画面闪烁, 思路: 可以在每一次push时, 更新编辑画布容器背景图
       canvas.loadFromJSON(
         prevState.object,
         () => {

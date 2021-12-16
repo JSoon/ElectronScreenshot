@@ -179,6 +179,9 @@ getScreenshot(async (imgSrc, startTime) => {
     if (!capture.selectRect) {
       return
     }
+    const {
+      r, b,
+    } = capture.selectRect
     
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT, {
       type: IPC_CHANNELS.SCREENSHOT_SELECT,
@@ -186,9 +189,6 @@ getScreenshot(async (imgSrc, startTime) => {
     })
 
     // 调整工具条样式
-    const {
-      r, b,
-    } = capture.selectRect
     const offsetY = 10
     J_SelectionToolbar.style.display = 'flex'
     // 设置工具条位置
