@@ -3,8 +3,9 @@
  */
 const fabric = require("fabric").fabric;
 const Arrow = require('./components/arrow');
-const { SHAPE_TYPE } = require('./enums');
+const { SHAPE_TYPE, SHAPE_TYPE_KEY_NAME } = require('./enums');
 const { History, HistoryType } = require('./screenshot-editor-history');
+const { extendFaricObjectProperty } = require('./utils');
 
 // 截屏底图
 const J_Background = document.querySelector('#J_Background')
@@ -20,7 +21,7 @@ const J_SelectionEditor = document.querySelector('#J_SelectionEditor')
 
 // 马赛克滤镜
 const bgPixelateFilter = new fabric.Image.filters.Pixelate({
-  blocksize: 10,
+  blocksize: 12,
 });
 // 马赛克背景图
 let mosaicBg = null;
@@ -35,14 +36,8 @@ function isOnBlank(e) {
 }
 
 // 是否是空白画布 (实际剩余一个不可选中的背景图对象)
-function isCanvasBlank(canvas) {
-  const allObjects = canvas?.getObjects() || []
-
-  return allObjects.length === 1 && allObjects[0] === normalBg
-
-  // const eraser = normalBg.getEraser()
-  // const eraserPaths = eraser?.getObjects('path') || []
-  // return allObjects.length === 1 && allObjects[0] === normalBg && !eraserPaths.length
+function isCanvasBlank(history) {
+  return history.state.length <= 1
 }
 
 // 工具设置位置调整
@@ -89,8 +84,8 @@ function updateToolbarSettingsPosition(settings) {
 }
 
 // 更新撤销工具图标样式
-function updateToolbarUndoStatus (canvas) {
-  if (isCanvasBlank(canvas)) {
+function updateToolbarUndoStatus (history) {
+  if (isCanvasBlank(history)) {
     J_SelectionUndo.classList.add('disabled')
   } else {
     J_SelectionUndo.classList.remove('disabled')
@@ -265,17 +260,22 @@ const captureEditorAdvance = ({
   const getTypeConfig = (type) => drawingConfig[type]
 
   // 显示/隐藏画布
-  const show = () => {
+  const show = async () => {
     // 若已显示, 则不进行重复操作
     if (isShown) {
       return
     }
 
-    history.push(HistoryType.Add)
+    // 更新编辑截屏
+    await updateCanvas()
 
+    // 禁用初始画布操作, 显示编辑画布
     isShown = true
     capture.disable()
     J_SelectionEditorWrapper.style.display = 'block'
+
+    // 添加编辑画布初始化历史记录
+    history.push(HistoryType.Add)
   }
   const hide = () => {
     capture.enable()
@@ -329,43 +329,56 @@ const captureEditorAdvance = ({
     const {
       w, h, x, y, r, b,
     } = capture.selectRect;
-    
-    // 创建背景图
-    new fabric.Image.fromURL(
-      capture.getImageUrl(),
-      (img) => {
-        mosaicBg = img
-        // 避免重复添加正常背景图
-        if (normalBg) {
-          canvas.remove(normalBg)
-        }
-        normalBg = fabric.util.object.clone(img)
-        normalBg.set({
-          evented: false,
-          selectable: false,
-          hoverCursor: 'default'
-        })
-        // 为马赛克背景图添加马赛克滤镜
-        mosaicBg.filters.push(bgPixelateFilter)
-        mosaicBg.applyFilters()
-
-        // 设置马赛克背景图
-        canvas.setWidth(w)
-        canvas.setHeight(h)
-        canvas.setBackgroundImage(mosaicBg)
-
-        // 设置正常背景图
-        canvas.add(normalBg)
-      },
-      {
-        scaleX: 1 / scaleFactor,
-        scaleY: 1 / scaleFactor,
-      }
-    )
 
     // 更新画布位置
     J_SelectionEditorWrapper.style.left = `${x}px`
     J_SelectionEditorWrapper.style.top = `${y}px`
+
+    return new Promise((resolve) => {
+      // 创建背景图
+      new fabric.Image.fromURL(
+        capture.getImageUrl(),
+        (imgObj) => {
+          mosaicBg = fabric.util.object.clone(imgObj)
+          
+          // 为马赛克背景图添加马赛克滤镜
+          mosaicBg.filters.push(bgPixelateFilter)
+          mosaicBg.applyFilters()
+  
+          // 设置马赛克背景图
+          canvas.setWidth(w)
+          canvas.setHeight(h)
+          canvas.setBackgroundImage(mosaicBg)
+
+          // // 避免重复添加正常背景图
+          // if (normalBg) {
+          //   canvas.remove(normalBg)
+          // }
+          normalBg = fabric.util.object.clone(imgObj)
+          extendFaricObjectProperty(normalBg, ['__TYPE__'])
+          normalBg.__TYPE__ = SHAPE_TYPE_KEY_NAME.BACKGROUND_NORMAL
+          // HACK: 若不应用空过滤器, 会导致正常背景也会被应用马赛克滤镜
+          normalBg.filters = []
+          normalBg.applyFilters()
+          normalBg.set({
+            evented: false,
+            selectable: false,
+            hoverCursor: 'default'
+          })
+  
+          // 设置正常背景图
+          canvas.add(normalBg)
+
+          resolve()
+        },
+        {
+          scaleX: 1 / scaleFactor,
+          scaleY: 1 / scaleFactor,
+        }
+      )
+
+    })
+    
   }
 
   // 销毁画布
@@ -376,19 +389,29 @@ const captureEditorAdvance = ({
   // 撤销到上一步
   const undoCanvas = () => {
     history.pop(() => {
+      updateToolbarUndoStatus(history);
       // 上一步状态
       const prevState = history.state[history.state.length - 1]
 
       canvas.loadFromJSON(
         prevState.object,
         () => {
-          updateToolbarUndoStatus(canvas);
 
         },
+        /**
+         * NOTE: 从 JSON 恢复的对象, 需要重新为其绑定事件
+         * @see {@link https://stackoverflow.com/questions/49697408/fabricjs-preserve-events-on-saving-getting-canvas-from-json}
+         * 
+         * @param {object} json   json 配置
+         * @param {object} object 形状实例对象
+         */
         (json, object) => {
-          if (object.__TYPE__ === 'ARROW') {
-            console.log('loadFromJSON', json, object);
-
+          // 重新赋值正常背景图
+          if (object.__TYPE__ === SHAPE_TYPE_KEY_NAME.BACKGROUND_NORMAL) {
+            normalBg = object;
+          }
+          // 重新绑定箭头形状事件
+          else if (object.__TYPE__ === SHAPE_TYPE_KEY_NAME.ARROW) {
             Arrow.bindEvents(object, canvas);
           }
 
@@ -453,10 +476,6 @@ const captureEditorAdvance = ({
   // 对象添加事件
   function onObjectAdded (e) {
     console.log('onObjectAdded', e.target);
-    // 图形创建的历史操作添加已在绘制结束阶段进行, 这里仅做画笔/文本的历史操作添加
-    // if (!e.target.__TYPE__) {
-    //   history.push(HistoryType.Add, e.target);
-    // }
   }
 
   // 对象修改事件
@@ -571,14 +590,8 @@ const captureEditorAdvance = ({
       padding: 8,
     };
     const textObj = new fabric.IText('', objOpts);
-    textObj.toObject = (function(toObject) {
-      return function(propertiesToInclude) {
-        return fabric.util.object.extend(toObject.apply(this, [propertiesToInclude]), {
-          __TYPE__: this.__TYPE__
-        });
-      };
-    })(textObj.toObject);
-    textObj.__TYPE__ = 'TEXT';
+    extendFaricObjectProperty(textObj, ['__TYPE__']);
+    textObj.__TYPE__ = SHAPE_TYPE_KEY_NAME.TEXT;
     // 退出编辑模式时, 若文本为空, 则移除该文本
     textObj.on('editing:exited', () => {
       if (!textObj.text.trim()) {
@@ -625,14 +638,8 @@ const captureEditorAdvance = ({
           ...drawingConfig[SHAPE_TYPE.RECT],
         };
         obj = new objAPI(objOpts);
-        obj.toObject = (function(toObject) {
-          return function(propertiesToInclude) {
-            return fabric.util.object.extend(toObject.apply(this, [propertiesToInclude]), {
-              __TYPE__: this.__TYPE__
-            });
-          };
-        })(obj.toObject);
-        obj.__TYPE__ = 'RECT';
+        extendFaricObjectProperty(obj, ['__TYPE__']);
+        obj.__TYPE__ = SHAPE_TYPE_KEY_NAME.RECT;
         canvas.add(obj);
         canvas.setActiveObject(obj, e);
       }
@@ -644,14 +651,8 @@ const captureEditorAdvance = ({
           ...drawingConfig[SHAPE_TYPE.ELLIPSE],
         };
         obj = new objAPI(objOpts);
-        obj.toObject = (function(toObject) {
-          return function(propertiesToInclude) {
-            return fabric.util.object.extend(toObject.apply(this, propertiesToInclude), {
-              __TYPE__: this.__TYPE__
-            });
-          };
-        })(obj.toObject);
-        obj.__TYPE__ = 'ELLIPSE';
+        extendFaricObjectProperty(obj, ['__TYPE__']);
+        obj.__TYPE__ = SHAPE_TYPE_KEY_NAME.ELLIPSE;
         canvas.add(obj);
         canvas.setActiveObject(obj, e);
       }
@@ -787,8 +788,8 @@ const captureEditorAdvance = ({
     // 若是画笔
     if (activeObj?.type === 'path') {
       setDrawingTool(
-        document.querySelector(`[data-icon="BRUSH"]`),
-        document.querySelector(`[data-type="BRUSH"]`),
+        document.querySelector(`[data-icon="${SHAPE_TYPE_KEY_NAME.BRUSH}"]`),
+        document.querySelector(`[data-type="${SHAPE_TYPE_KEY_NAME.BRUSH}"]`),
         { setType, show, getCanvas },
         SHAPE_TYPE.BRUSH
       );
@@ -811,7 +812,7 @@ const captureEditorAdvance = ({
     isMouseDown = false;
     isDrawingCreated = false;
 
-    updateToolbarUndoStatus(canvas);
+    updateToolbarUndoStatus(history);
     
     canvas.isDrawingMode = false;
     canvas.renderAll();

@@ -4,6 +4,8 @@
  * @see {@link http://jsfiddle.net/ug2gskj1/} 参考资料
  */
 
+const { extendFaricObjectProperty } = require("../utils");
+
 class Arrow {
   // 画布
   canvas = null;
@@ -63,17 +65,7 @@ class Arrow {
       height: 0,
       fill: config.color,
     });
-    this.arrowHead.toObject = (function(toObject) {
-      return function(propertiesToInclude) {
-        return fabric.util.object.extend(toObject.apply(this, [propertiesToInclude]), {
-          id: this.id,
-          __TYPE__: this.__TYPE__,
-          arrowPart: this.arrowPart,
-          arrowLine: this.arrowLine,
-          arrowTail: this.arrowTail,
-        });
-      };
-    })(this.arrowHead.toObject);
+    extendFaricObjectProperty(this.arrowHead, ['id', '__TYPE__', 'arrowPart', 'arrowLine', 'arrowTail']);
 
     // 箭头中线
     this.arrowLine = new fabric.Line([left, top, left, top], {
@@ -88,17 +80,7 @@ class Arrow {
       lockScalingX: true,
       lockScalingY: true,
     });
-    this.arrowLine.toObject = (function(toObject) {
-      return function(propertiesToInclude) {
-        return fabric.util.object.extend(toObject.apply(this, [propertiesToInclude]), {
-          id: this.id,
-          __TYPE__: this.__TYPE__,
-          arrowPart: this.arrowPart,
-          arrowHead: this.arrowHead,
-          arrowTail: this.arrowTail,
-        });
-      };
-    })(this.arrowLine.toObject);
+    extendFaricObjectProperty(this.arrowLine, ['id', '__TYPE__', 'arrowPart', 'arrowHead', 'arrowTail']);
 
     // 箭头尾部
     this.arrowTail = new fabric.Circle({
@@ -114,34 +96,24 @@ class Arrow {
       lockScalingY: true,
       lockRotation: true,
     });
-    this.arrowTail.toObject = (function(toObject) {
-      return function(propertiesToInclude) {
-        return fabric.util.object.extend(toObject.apply(this, [propertiesToInclude]), {
-          id: this.id,
-          __TYPE__: this.__TYPE__,
-          arrowPart: this.arrowPart,
-          arrowHead: this.arrowHead,
-          arrowLine: this.arrowLine,
-        });
-      };
-    })(this.arrowTail.toObject);
+    extendFaricObjectProperty(this.arrowTail, ['id', '__TYPE__', 'arrowPart', 'arrowHead', 'arrowLine']);
     
     // 创建关联引用, 设置自定义属性
     this.arrowHead.id = `arrowHead_${new Date().getTime()}`;
     this.arrowLine.id = `arrowLine_${new Date().getTime()}`;
     this.arrowTail.id = `arrowTail_${new Date().getTime()}`;
 
-    this.arrowHead.__TYPE__ = 'ARROW';
+    this.arrowHead.__TYPE__ = SHAPE_TYPE_KEY_NAME.ARROW;
     this.arrowHead.arrowPart = 'arrowHead';
     this.arrowHead.arrowLine = this.arrowLine.id;
     this.arrowHead.arrowTail = this.arrowTail.id;
 
-    this.arrowLine.__TYPE__ = 'ARROW';
+    this.arrowLine.__TYPE__ = SHAPE_TYPE_KEY_NAME.ARROW;
     this.arrowLine.arrowPart = 'arrowLine';
     this.arrowLine.arrowHead = this.arrowHead.id;
     this.arrowLine.arrowTail = this.arrowTail.id;
     
-    this.arrowTail.__TYPE__ = 'ARROW';
+    this.arrowTail.__TYPE__ = SHAPE_TYPE_KEY_NAME.ARROW;
     this.arrowTail.arrowPart = 'arrowTail';
     this.arrowTail.arrowHead = this.arrowHead.id;
     this.arrowTail.arrowLine = this.arrowLine.id;
@@ -171,21 +143,7 @@ class Arrow {
         Arrow.arrowTailMovingHandler(e, canvas, config)
       });
     }
-
-
-
-
-    // this.arrowHead.on('moving', this.arrowHeadMovingHandler.bind(this));
-    // this.arrowLine.on('moving', this.arrowLineMovingHandler.bind(this));
-    // this.arrowTail.on('moving', this.arrowTailMovingHandler.bind(this));
   }
-
-  // 事件解绑
-  // unbindEvents() {
-  //   this.arrowHead.off('moving', this.arrowHeadMovingHandler.bind(this));
-  //   this.arrowLine.off('moving', this.arrowLineMovingHandler.bind(this));
-  //   this.arrowTail.off('moving', this.arrowTailMovingHandler.bind(this));
-  // }
 
   // 移动箭头中线
   static arrowLineMovingHandler (e, canvas, config) {

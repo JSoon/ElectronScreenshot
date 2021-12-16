@@ -5,32 +5,6 @@
 const { desktopCapturer, ipcRenderer } = require('electron')
 const { IPC_CHANNELS } = require('./enums')
 
-// 图片转objectURL
-const imageToBlob = (imageURL) => {
-  const img = new Image()
-  const c = document.createElement('canvas')
-  const ctx = c.getContext('2d')
-  img.crossOrigin = 'anonymous'
-  img.src = imageURL
-  return new Promise((resolve, reject) => {
-    img.onload = function () {
-      c.width = this.naturalWidth
-      c.height = this.naturalHeight
-      ctx.drawImage(this, 0, 0)
-      c.toBlob((blob) => {
-        // here the image is a blob
-        resolve(blob)
-      },
-      // Only PNG files are supported in clipboard API
-      'image/png',
-      0.75)
-    }
-    img.onerror = function (err) {
-      reject(err)
-    }
-  })
-}
-
 // 获取截屏
 const getScreenshot = async (callback) => {
   // 获取当前屏幕

@@ -56,7 +56,7 @@ document.body.addEventListener('mousedown', e => {
 // 开始截屏
 getScreenshot(async (imgSrc, startTime) => {
   // console.log(imgSrc);
-  // alert(`截屏耗时: ${new Date().getTime() - startTime} 毫秒`)
+  console.info(`截屏耗时: ${new Date().getTime() - startTime} 毫秒`)
   
   // 截屏完成后, 显示遮罩层
   J_SelectionMask.style.display = 'block'
@@ -185,10 +185,7 @@ getScreenshot(async (imgSrc, startTime) => {
       screenId: currentScreen.id,
     })
 
-    // 1. 更新编辑截屏
-    fabricCapture.updateCanvas()
-
-    // 2. 调整工具条样式
+    // 调整工具条样式
     const {
       r, b,
     } = capture.selectRect

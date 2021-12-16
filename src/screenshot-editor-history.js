@@ -32,15 +32,30 @@ class History {
     }
 
     // const newState = JSON.stringify(this.canvas)
-    // debugger
+    // 
+    /**
+     * NOTE: toObject 会导致某些属性丢失, 所以需要手动设置 propertiesToInclude 以保证从 JSON 还原时的状态
+     * 
+     * @see {@link https://github.com/fabricjs/fabric.js/issues/3873}
+     * @see {@link https://stackoverflow.com/questions/41286547/fabric-js-extending-toobject-with-custom-properties-loses-default-ones}
+     */
     const newState = this.canvas.toObject([
+      'cacheKey',
+      'clipPath',
+      'erasable',
+      'evented',
+      'filters',
       'hasBorders',
       'hasControls',
+      'hoverCursor',
+      'lockRotation',
       'lockScalingX',
       'lockScalingY',
-      'lockRotation',
+      'selectable',
     ])
-    this.state.push(new HistoryItem(type, newState))
+    console.log('newState', newState);
+    // this.state.push(new HistoryItem(type, newState))
+    this.state.push(new HistoryItem(type, JSON.stringify(newState)))
 
     console.log('history', this.state)
   }
