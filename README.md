@@ -2,7 +2,7 @@
 
 基于 [Electron](https://www.electronjs.org/) 开发的截屏软件.
 
-![demo](./src/assets/image/demo.jpg)
+![demo](./src/assets/image/demo.png)
 
 # Runtime Environment
 
@@ -17,7 +17,7 @@
 # electron-builder  21.2.0
 ```
 
-> 降级为固定版本 21.2.0 是因为在 Mac OS 下可能无法构建 ia32 架构, 错误信息: exited with code ERR_ELECTRON_BUILDER_CANNOT_EXECUTE. 
+> 降级为固定版本 21.2.0 是因为在 Mac OS 下可能无法构建 ia32 架构, 错误信息: exited with code ERR_ELECTRON_BUILDER_CANNOT_EXECUTE.
 > 
 > 若不需要在 Mac OS 下构建 Windows 应用, 则可使用最新版本.
 
@@ -26,10 +26,14 @@
 # Usage
 
 ```bash
-# 1. 安装
+# 1. 安装依赖
 npm i
 
-# 2. 运行
+# 2. fabric 自定义构建: 新增 erasing 模块 (执行命令前需全局安装 uglify-js)
+cd node_modules/fabric
+node build.js modules=ALL exclude=gestures
+
+# 3. 运行
 npm run start
 ```
 
@@ -56,7 +60,7 @@ npm run dist:win
 - [x] 椭圆形框工具
 - [x] 箭头工具
 - [x] 画笔工具
-- [ ] 马赛克工具🤔 (马赛克/毛玻璃)
+- [x] 马赛克工具🤔 (马赛克/毛玻璃)
 - [x] 文字工具
 - [x] 撤销工具 (操作缓存)
 - [x] 工具栏图标
@@ -64,5 +68,5 @@ npm run dist:win
 # Issues
 
 - [ ] [截图图片鼠标无法隐藏](https://github.com/electron/electron/issues/7584)
-- [x] [Mac-10.13.6] 截屏窗口打开后, 由于是simpleFullscreen状态, 系统菜单栏会被隐藏, 退出截屏后仍然处于隐藏状态
+- [x] ~~[Mac-10.13.6] 截屏窗口打开后, 由于是simpleFullscreen状态, 系统菜单栏会被隐藏, 退出截屏后仍然处于隐藏状态~~ (已使用非全屏方式规避)
 - 其他兼容性问题待测试

@@ -1,6 +1,7 @@
 /**
  * 画布编辑操作历史
  */
+const J_SelectionEditorWrapper = document.querySelector('#J_SelectionEditorWrapper')
 
 class HistoryType {
   static Add = 'Add'
@@ -19,6 +20,7 @@ class HistoryItem {
 
 class History {
   state = []
+  bgState = []
   canvas = null
 
   constructor (canvas) {
@@ -34,6 +36,7 @@ class History {
     // const newState = JSON.stringify(this.canvas)
     // 
     /**
+     * 编辑画布最新状态
      * NOTE: toObject 会导致某些属性丢失, 所以需要手动设置 propertiesToInclude 以保证从 JSON 还原时的状态
      * 
      * @see {@link https://github.com/fabricjs/fabric.js/issues/3873}
@@ -57,6 +60,13 @@ class History {
     // this.state.push(new HistoryItem(type, newState))
     this.state.push(new HistoryItem(type, JSON.stringify(newState)))
 
+    // 更新编辑画布容器背景图
+    const newStateImg = this.canvas.toDataURL({
+      enableRetinaScaling: true
+    })
+    this.bgState.push(newStateImg)
+    J_SelectionEditorWrapper.style.backgroundImage = `url(${newStateImg})`
+
     console.log('history', this.state)
   }
 
@@ -64,6 +74,12 @@ class History {
   pop (callback = () => {}) {
     if (this.state.length > 1) {
       this.state.pop()
+
+      // 更新编辑画布容器背景图
+      this.bgState.pop()
+      const newStateImg = this.bgState[this.bgState.length - 1]
+      J_SelectionEditorWrapper.style.backgroundImage = `url(${newStateImg})`
+          
       callback()
     }
 

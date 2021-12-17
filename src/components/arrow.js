@@ -4,6 +4,7 @@
  * @see {@link http://jsfiddle.net/ug2gskj1/} 参考资料
  */
 
+const { SHAPE_TYPE_KEY_NAME } = require("../enums");
 const { extendFaricObjectProperty } = require("../utils");
 
 class Arrow {

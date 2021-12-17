@@ -397,11 +397,10 @@ const captureEditorAdvance = ({
       // 上一步状态
       const prevState = history.state[history.state.length - 1]
 
-      // TODO: 解决从JSON恢复时导致的画面闪烁, 思路: 可以在每一次push时, 更新编辑画布容器背景图
       canvas.loadFromJSON(
         prevState.object,
         () => {
-
+          // 恢复成功回调
         },
         /**
          * NOTE: 从 JSON 恢复的对象, 需要重新为其绑定事件
