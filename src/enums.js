@@ -20,7 +20,7 @@ const IPC_CHANNELS = {
   SCREENSHOT_REGISTER_SHORTCUTS: 'register-shortcuts',
   // 快捷键移除
   SCREENSHOT_UNREGISTER_SHORTCUTS: 'unregister-shortcuts',
-}
+};
 
 // 形状对象类型
 const SHAPE_TYPE = {
@@ -32,15 +32,15 @@ const SHAPE_TYPE = {
   BRUSH: 5, // 画笔
   MOSAIC: 6, // 马赛克
   TEXT: 7, // 文本
-}
+};
 
 // 形状对象类型键名称: { RECT: 'RECT', ... }
-const SHAPE_TYPE_KEY_NAME = {}
-Object.keys(SHAPE_TYPE).forEach(k => SHAPE_TYPE_KEY_NAME[k] = k)
+const SHAPE_TYPE_KEY_NAME = {};
+Object.keys(SHAPE_TYPE).forEach(k => SHAPE_TYPE_KEY_NAME[k] = k);
 
 
 module.exports = {
   IPC_CHANNELS,
   SHAPE_TYPE,
   SHAPE_TYPE_KEY_NAME,
-}
+};

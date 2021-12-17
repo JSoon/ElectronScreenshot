@@ -8,6 +8,7 @@
     "pack": "electron-builder --dir",
     "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win",
+    "lint": "npx eslint --cache --fix --ext .js src/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -32,7 +33,8 @@
   },
   "devDependencies": {
     "electron": "^13.1.7",
-    "electron-builder": "21.2.0"
+    "electron-builder": "21.2.0",
+    "eslint": "^8.4.1"
   },
   "build": {
     "appId": "com.electron.electronscreenshot",

@@ -4,8 +4,9 @@
  * @see {@link http://jsfiddle.net/ug2gskj1/} 参考资料
  */
 
-const { SHAPE_TYPE_KEY_NAME } = require("../enums");
-const { extendFaricObjectProperty } = require("../utils");
+const fabric = require('fabric').fabric;
+const { SHAPE_TYPE_KEY_NAME } = require('../enums');
+const { extendFaricObjectProperty } = require('../utils');
 
 class Arrow {
   // 画布
@@ -131,17 +132,15 @@ class Arrow {
   static bindEvents(obj, canvas, config = 'sm') {
     if (obj.arrowPart === 'arrowHead') {
       obj.on('moving', function (e) {
-        Arrow.arrowHeadMovingHandler(e, canvas, config)
+        Arrow.arrowHeadMovingHandler(e, canvas, config);
       });
-    }
-    else if (obj.arrowPart === 'arrowLine') {
+    } else if (obj.arrowPart === 'arrowLine') {
       obj.on('moving', function (e) {
-        Arrow.arrowLineMovingHandler(e, canvas, config)
+        Arrow.arrowLineMovingHandler(e, canvas, config);
       });
-    }
-    else if (obj.arrowPart === 'arrowTail') {
+    } else if (obj.arrowPart === 'arrowTail') {
       obj.on('moving', function (e) {
-        Arrow.arrowTailMovingHandler(e, canvas, config)
+        Arrow.arrowTailMovingHandler(e, canvas, config);
       });
     }
   }
@@ -286,7 +285,7 @@ class Arrow {
 
   // 更新箭头头部尺寸
   static updateHeadSize ({
-    arrowLine, size = 'sm', coords
+    arrowLine, size = 'sm', coords,
   }) {
     const lineWidth = arrowLine ? arrowLine.width : coords.x1 - coords.x2;
     const lineHeight = arrowLine ? arrowLine.height : coords.y1 - coords.y2;
@@ -309,14 +308,14 @@ class Arrow {
 
   // 更新箭头中线描边宽度
   static updateLineStrokeWidth ({
-    arrowLine, size = 'sm', coords
+    arrowLine, size = 'sm', coords,
   }) {
     const lineWidth = arrowLine ? arrowLine.width : coords.x1 - coords.x2;
     const lineHeight = arrowLine ? arrowLine.height : coords.y1 - coords.y2;
     const arrowLineLength = Math.abs(Math.sqrt(Math.pow((lineWidth), 2) + Math.pow((lineHeight), 2)));
     let lineStrokeWidth = arrowLineLength / 5;
     if (lineStrokeWidth > Arrow.sizePreset[size].line) {
-      lineStrokeWidth = Arrow.sizePreset[size].line
+      lineStrokeWidth = Arrow.sizePreset[size].line;
     }
     return lineStrokeWidth;
   }
@@ -340,11 +339,9 @@ class Arrow {
   
     if (x === 0) {
       angle = (y === 0) ? 0 : (y > 0) ? Math.PI / 2 : Math.PI * 3 / 2;
-    } 
-    else if (y === 0) {
+    } else if (y === 0) {
       angle = (x > 0) ? 0 : Math.PI;
-    } 
-    else {
+    } else {
       angle = (x < 0) ? Math.atan(y / x) + Math.PI : (y < 0) ? Math.atan(y / x) + (2 * Math.PI) : Math.atan(y / x);
     }
   
@@ -361,7 +358,7 @@ class Arrow {
   // 根据当前箭头部位, 获取所有箭头部位组合
   static getArrowGroup (arrowPart, canvas) {
     if (!arrowPart) {
-      return []
+      return [];
     }
     const allObjects = canvas.getObjects();
 
@@ -386,9 +383,8 @@ class Arrow {
       arrowTail = arrowPart;
       arrowHead = allObjects.find(o => o.id === arrowPart.arrowHead);
       arrowLine = allObjects.find(o => o.id === arrowPart.arrowLine);
-    }
-    else {
-      return []
+    } else {
+      return [];
     }
 
     return [arrowHead, arrowLine, arrowTail];
