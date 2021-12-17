@@ -7,9 +7,9 @@
 # Runtime Environment
 
 ```
-# Electron   13.1.7
+# Electron   13.6.3
 # Node       14.16.0
-# Chromium   91.0.4472.124
+# Chromium   91.0.4472.164
 ```
 
 # Build Environment
@@ -29,11 +29,14 @@
 # 1. 安装依赖
 npm i
 
-# 2. fabric 自定义构建: 新增 erasing 模块 (执行命令前需全局安装 uglify-js)
+# 2. 构建 Electron Node 原生模块
+npm run rebuild
+
+# 3. fabric 自定义构建: 新增 erasing 模块 (执行命令前需全局安装 uglify-js)
 cd node_modules/fabric
 node build.js modules=ALL exclude=gestures
 
-# 3. 运行
+# 4. 运行
 npm run start
 ```
 
