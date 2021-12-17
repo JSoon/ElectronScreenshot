@@ -149,55 +149,49 @@
     .toolbar-item-settings .stroke-width {
       display: flex;
       align-items: center;
-      margin-right: 20px;
     }
 
     .toolbar-item-settings .stroke-width span {
-      margin-left: 20px;
-      background-color: grey;
-      border-radius: 50%;
-    }
-
-    .toolbar-item-settings .stroke-width span:nth-child(1) {
-      width: 4px;
-      height: 4px;
-    }
-
-    .toolbar-item-settings .stroke-width span:nth-child(2) {
-      width: 10px;
-      height: 10px;
-    }
-
-    .toolbar-item-settings .stroke-width span:nth-child(3) {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       width: 16px;
       height: 16px;
     }
 
-    .toolbar-item-settings .stroke-width span:first-child {
-      margin-left: 0;
+    .toolbar-item-settings .stroke-width span:nth-child(2) {
+      margin: 0 14px 0 12px;
     }
 
-    .toolbar-item-settings .stroke-width .active {
+    .toolbar-item-settings .stroke-width span::after {
+      content: "";
+      display: block;
+      background-color: grey;
+      border-radius: 50%;
+    }
+
+    .toolbar-item-settings .stroke-width span.active::after {
       background-color: white;
     }
 
-    .toolbar-item-settings .stroke-width .thick {
+    .toolbar-item-settings .stroke-width span:nth-child(1)::after {
       width: 4px;
       height: 4px;
     }
 
-    .toolbar-item-settings .stroke-width .medium {
-      width: 8px;
-      height: 8px;
+    .toolbar-item-settings .stroke-width span:nth-child(2)::after {
+      width: 10px;
+      height: 10px;
     }
 
-    .toolbar-item-settings .stroke-width .bold {
-      width: 12px;
-      height: 12px;
+    .toolbar-item-settings .stroke-width span:nth-child(3)::after {
+      width: 14px;
+      height: 14px;
     }
 
     .toolbar-item-settings .stroke-color {
       display: flex;
+      margin-left: 20px;
     }
 
     .toolbar-item-settings .stroke-color span {

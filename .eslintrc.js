@@ -6,6 +6,9 @@ module.exports = {
     es6: true,
     commonjs: true,
   },
+  plugins: [
+    'html',
+  ],
   extends: 'eslint:recommended',
   parserOptions: {
     ecmaVersion: 'latest',
