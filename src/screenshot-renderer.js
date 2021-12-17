@@ -56,7 +56,7 @@ document.body.addEventListener('mousedown', e => {
 // 开始截屏
 getScreenshot(async (imgSrc, startTime) => {
   // console.log(imgSrc);
-  // alert(`截屏耗时: ${new Date().getTime() - startTime} 毫秒`)
+  console.info(`截屏耗时: ${new Date().getTime() - startTime} 毫秒`)
   
   // 截屏完成后, 显示遮罩层
   J_SelectionMask.style.display = 'block'
@@ -179,19 +179,16 @@ getScreenshot(async (imgSrc, startTime) => {
     if (!capture.selectRect) {
       return
     }
+    const {
+      r, b,
+    } = capture.selectRect
     
     ipcRenderer.send(IPC_CHANNELS.SCREENSHOT, {
       type: IPC_CHANNELS.SCREENSHOT_SELECT,
       screenId: currentScreen.id,
     })
 
-    // 1. 更新编辑截屏
-    fabricCapture.updateCanvas()
-
-    // 2. 调整工具条样式
-    const {
-      r, b,
-    } = capture.selectRect
+    // 调整工具条样式
     const offsetY = 10
     J_SelectionToolbar.style.display = 'flex'
     // 设置工具条位置
@@ -282,13 +279,6 @@ getScreenshot(async (imgSrc, startTime) => {
 
   //#region 截屏工具条
   // 初始化截屏工具设置项样式
-  J_StrokeWidth.forEach(wrapper => {
-    wrapper.querySelectorAll('span').forEach((ele) => {
-      const { width = '' } = ele.dataset || {}
-      ele.style.width = `${Number(width) + 2}px`
-      ele.style.height = `${Number(width) + 2}px`
-    })
-  })
   J_StrokeColor.forEach(wrapper => {
     wrapper.querySelectorAll('span').forEach((ele) => {
       const { color = '' } = ele.dataset || {}
@@ -320,7 +310,7 @@ getScreenshot(async (imgSrc, startTime) => {
             size,
           })
         }
-        else if (type === 'BRUSH') {
+        else if (type === 'BRUSH' || type === 'MOSAIC') {
           fabricCapture.setTypeConfig(SHAPE_TYPE[type], {
             strokeWidth: Number(width)
           })

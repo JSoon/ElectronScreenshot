@@ -12,7 +12,8 @@ const {
   dialog
 } = require('electron')
 const { IPC_CHANNELS } = require('./enums')
-const { getCurrentWindow, getCurrentScreen, isMacOS, hideCurrentWindow, closeCurrentWindow, getFilename } = require('./utils-main')
+const { getCurrentWindow, getCurrentScreen, isMacOS, hideCurrentWindow, closeCurrentWindow, isWindows } = require('./utils-main')
+const { getFilename } = require('./utils')
 
 // 所有截屏窗口
 let screenshotWins = []
@@ -30,19 +31,22 @@ class Screenshot {
 
     screenshotWins = displays.map(display => {
       // console.log('截屏开始', display.id);
-
       const win = new BrowserWindow({
-        fullscreen: true,
-        simpleFullscreen: true, // MacOS
+        // Windows 正常使用全屏模式; Mac 下全屏会切换屏幕, 导致失效, 故不设置全屏, 而采用窗口置顶
+        fullscreen: isWindows,
+        width: display.bounds.width,
+        height: display.bounds.height,
+        x: display.bounds.x,
+        y: display.bounds.y,
         frame: false,
         movable: false,
-        // kiosk: true,
         resizable: false,
-        enableLargerThanScreen: true,
+        enableLargerThanScreen: true,  // MacOS
         hasShadow: false,
         transparent: true,
         // opacity: 0.7,
         skipTaskbar: true,
+        autoHideMenuBar: true,
         webPreferences: {
           nodeIntegration: true,
           contextIsolation: false,
@@ -51,13 +55,12 @@ class Screenshot {
       })
 
       if (isMacOS) {
-        app.dock.hide()
         win.setAlwaysOnTop(true, 'screen-saver')
-        win.setVisibleOnAllWorkspaces(true)
+        win.setVisibleOnAllWorkspaces(true, {
+          visibleOnFullScreen: true,
+          skipTransformProcessType: true
+        })
         win.setFullScreenable(false)
-        win.show()
-        app.dock.show()
-        win.setVisibleOnAllWorkspaces(false)
       }
 
       win.loadFile(path.join(__dirname, 'screenshot.html'))

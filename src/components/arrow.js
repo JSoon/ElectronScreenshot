@@ -4,6 +4,9 @@
  * @see {@link http://jsfiddle.net/ug2gskj1/} 参考资料
  */
 
+const { SHAPE_TYPE_KEY_NAME } = require("../enums");
+const { extendFaricObjectProperty } = require("../utils");
+
 class Arrow {
   // 画布
   canvas = null;
@@ -47,12 +50,8 @@ class Arrow {
   constructor (options) {
     const { left, top, canvas, config } = options;
 
-    this.canvas = canvas;
-    this.config = config;
-
     // 箭头头部
     this.arrowHead = new fabric.Triangle({
-      arrowPart: 'arrowHead',
       left,
       top,
       originX: 'center',
@@ -65,16 +64,15 @@ class Arrow {
       angle: 0,
       width: 0,
       height: 0,
-      fill: this.config.color,
+      fill: config.color,
     });
-    this.arrowHead.on('moving', this.arrowHeadMovingHandler.bind(this));
+    extendFaricObjectProperty(this.arrowHead, ['id', '__TYPE__', 'arrowPart', 'arrowLine', 'arrowTail']);
 
     // 箭头中线
     this.arrowLine = new fabric.Line([left, top, left, top], {
-      arrowPart: 'arrowLine',
       left,
       top,
-      stroke: this.config.color,
+      stroke: config.color,
       strokeWidth: 0,
       hasBorders: false,
       hasControls: false,
@@ -83,15 +81,14 @@ class Arrow {
       lockScalingX: true,
       lockScalingY: true,
     });
-    this.arrowLine.on('moving', this.arrowLineMovingHandler.bind(this));
+    extendFaricObjectProperty(this.arrowLine, ['id', '__TYPE__', 'arrowPart', 'arrowHead', 'arrowTail']);
 
     // 箭头尾部
     this.arrowTail = new fabric.Circle({
-      arrowPart: 'arrowTail',
       left,
       top,
       radius: 0,
-      fill: this.config.color,
+      fill: config.color,
       originX: 'center',
       originY: 'center',
       hasBorders: false,
@@ -100,24 +97,61 @@ class Arrow {
       lockScalingY: true,
       lockRotation: true,
     });
-    this.arrowTail.on('moving', this.arrowTailMovingHandler.bind(this));
+    extendFaricObjectProperty(this.arrowTail, ['id', '__TYPE__', 'arrowPart', 'arrowHead', 'arrowLine']);
     
-    // 创建关联引用
-    this.arrowHead.arrowLine = this.arrowLine;
-    this.arrowHead.arrowTail = this.arrowTail;
-    this.arrowLine.arrowHead = this.arrowHead;
-    this.arrowLine.arrowTail = this.arrowTail;
-    this.arrowTail.arrowHead = this.arrowHead;
-    this.arrowTail.arrowLine = this.arrowLine;
+    // 创建关联引用, 设置自定义属性
+    this.arrowHead.id = `arrowHead_${new Date().getTime()}`;
+    this.arrowLine.id = `arrowLine_${new Date().getTime()}`;
+    this.arrowTail.id = `arrowTail_${new Date().getTime()}`;
+
+    this.arrowHead.__TYPE__ = SHAPE_TYPE_KEY_NAME.ARROW;
+    this.arrowHead.arrowPart = 'arrowHead';
+    this.arrowHead.arrowLine = this.arrowLine.id;
+    this.arrowHead.arrowTail = this.arrowTail.id;
+
+    this.arrowLine.__TYPE__ = SHAPE_TYPE_KEY_NAME.ARROW;
+    this.arrowLine.arrowPart = 'arrowLine';
+    this.arrowLine.arrowHead = this.arrowHead.id;
+    this.arrowLine.arrowTail = this.arrowTail.id;
+    
+    this.arrowTail.__TYPE__ = SHAPE_TYPE_KEY_NAME.ARROW;
+    this.arrowTail.arrowPart = 'arrowTail';
+    this.arrowTail.arrowHead = this.arrowHead.id;
+    this.arrowTail.arrowLine = this.arrowLine.id;
+
+    // 事件绑定
+    Arrow.bindEvents(this.arrowHead, canvas, config);
+    Arrow.bindEvents(this.arrowLine, canvas, config);
+    Arrow.bindEvents(this.arrowTail, canvas, config);
 
     return this;
   }
 
+  // 事件绑定
+  static bindEvents(obj, canvas, config = 'sm') {
+    if (obj.arrowPart === 'arrowHead') {
+      obj.on('moving', function (e) {
+        Arrow.arrowHeadMovingHandler(e, canvas, config)
+      });
+    }
+    else if (obj.arrowPart === 'arrowLine') {
+      obj.on('moving', function (e) {
+        Arrow.arrowLineMovingHandler(e, canvas, config)
+      });
+    }
+    else if (obj.arrowPart === 'arrowTail') {
+      obj.on('moving', function (e) {
+        Arrow.arrowTailMovingHandler(e, canvas, config)
+      });
+    }
+  }
+
   // 移动箭头中线
-  arrowLineMovingHandler (e) {
+  static arrowLineMovingHandler (e, canvas, config) {
     const arrowLine = e.transform.target;
-    const arrowHead = arrowLine.arrowHead;
-    const arrowTail = arrowLine.arrowTail;
+    const allObjects = canvas.getObjects();
+    const arrowHead = allObjects.find(o => o.id === arrowLine.arrowHead);
+    const arrowTail = allObjects.find(o => o.id === arrowLine.arrowTail);
 
     const oldCenterX = (arrowLine.x1 + arrowLine.x2) / 2;
     const oldCenterY = (arrowLine.y1 + arrowLine.y2) / 2;
@@ -155,24 +189,29 @@ class Arrow {
     Arrow.fixLayerIndex(arrowHead, arrowLine, arrowTail);
     arrowHead.setCoords();
     arrowTail.setCoords();
-    this.canvas.renderAll();
+    canvas.renderAll();
   }
 
   // 移动箭头头部
-  arrowHeadMovingHandler (e) {
+  static arrowHeadMovingHandler (e, canvas, config) {
     const arrowHead = e.transform.target;
-    const arrowLine = arrowHead.arrowLine;
-    const arrowTail = arrowHead.arrowTail;
+    const allObjects = canvas.getObjects();
+    const arrowLine = allObjects.find(o => o.id === arrowHead.arrowLine);
+    const arrowTail = allObjects.find(o => o.id === arrowHead.arrowTail);
     const pointer = arrowHead.getCenterPoint();
 
+    // debugger
+
     arrowLine.set({
+      x1: arrowTail.left,
+      y1: arrowTail.top,
       x2: pointer.x,
       y2: pointer.y,
     });
 
     const headSize = Arrow.updateHeadSize({
       arrowLine,
-      size: this.config.size,
+      size: config.size,
     });
     const headAngle = Arrow.updateHeadAngle(arrowLine);
     arrowHead.set({
@@ -183,37 +222,40 @@ class Arrow {
 
     const lineStrokeWidth = Arrow.updateLineStrokeWidth({
       arrowLine,
-      size: this.config.size,
+      size: config.size,
     });
     arrowLine.set({
       strokeWidth: lineStrokeWidth,
     });
 
-    const tailRadius = Arrow.updateTailRadius(lineStrokeWidth, this.config.size);
+    const tailRadius = Arrow.updateTailRadius(lineStrokeWidth, config.size);
     arrowTail.set({
       radius: tailRadius,
     });
 
     arrowLine.setCoords();
     arrowTail.setCoords();
-    this.canvas.renderAll();
+    canvas.renderAll();
   }
 
   // 移动箭头尾部
-  arrowTailMovingHandler (e) {
+  static arrowTailMovingHandler (e, canvas, config) {
     const arrowTail = e.transform.target;
-    const arrowLine = arrowTail.arrowLine;
-    const arrowHead = arrowTail.arrowHead;
+    const allObjects = canvas.getObjects();
+    const arrowLine = allObjects.find(o => o.id === arrowTail.arrowLine);
+    const arrowHead = allObjects.find(o => o.id === arrowTail.arrowHead);
     const pointer = arrowTail.getCenterPoint();
 
     arrowLine.set({
       x1: pointer.x,
       y1: pointer.y,
+      x2: arrowHead.left,
+      y2: arrowHead.top,
     });
 
     const headSize = Arrow.updateHeadSize({
       arrowLine,
-      size: this.config.size,
+      size: config.size,
     });
     const headAngle = Arrow.updateHeadAngle(arrowLine);
     arrowHead.set({
@@ -224,13 +266,13 @@ class Arrow {
 
     const lineStrokeWidth = Arrow.updateLineStrokeWidth({
       arrowLine,
-      size: this.config.size,
+      size: config.size,
     });
     arrowLine.set({
       strokeWidth: lineStrokeWidth,
     });
 
-    const tailRadius = Arrow.updateTailRadius(lineStrokeWidth, this.config.size);
+    const tailRadius = Arrow.updateTailRadius(lineStrokeWidth, config.size);
     arrowTail.set({
       top: pointer.y,
       left: pointer.x,
@@ -239,7 +281,7 @@ class Arrow {
 
     arrowHead.setCoords();
     arrowLine.setCoords();
-    this.canvas.renderAll();
+    canvas.renderAll();
   }
 
   // 更新箭头头部尺寸
@@ -317,29 +359,36 @@ class Arrow {
   }
 
   // 根据当前箭头部位, 获取所有箭头部位组合
-  static getArrowGroup (arrowPart) {
+  static getArrowGroup (arrowPart, canvas) {
     if (!arrowPart) {
       return []
     }
+    const allObjects = canvas.getObjects();
 
     let arrowHead = null;
     let arrowLine = null;
     let arrowTail = null;
-
+    
+    // 若当前是头部
     if (!arrowPart.arrowHead) {
       arrowHead = arrowPart;
-      arrowLine = arrowPart.arrowLine;
-      arrowTail = arrowPart.arrowTail;
+      arrowLine = allObjects.find(o => o.id === arrowPart.arrowLine);
+      arrowTail = allObjects.find(o => o.id === arrowPart.arrowTail);
     }
-    if (!arrowPart.arrowLine) {
+    // 若当前是中线
+    else if (!arrowPart.arrowLine) {
       arrowLine = arrowPart;
-      arrowHead = arrowPart.arrowHead;
-      arrowTail = arrowPart.arrowTail;
+      arrowHead = allObjects.find(o => o.id === arrowPart.arrowHead);
+      arrowTail = allObjects.find(o => o.id === arrowPart.arrowTail);
     }
-    if (!arrowPart.arrowTail) {
+    // 若当前是尾部
+    else if (!arrowPart.arrowTail) {
       arrowTail = arrowPart;
-      arrowHead = arrowPart.arrowHead;
-      arrowLine = arrowPart.arrowLine;
+      arrowHead = allObjects.find(o => o.id === arrowPart.arrowHead);
+      arrowLine = allObjects.find(o => o.id === arrowPart.arrowLine);
+    }
+    else {
+      return []
     }
 
     return [arrowHead, arrowLine, arrowTail];

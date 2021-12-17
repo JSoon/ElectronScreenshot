@@ -3,7 +3,9 @@
  */
 const fabric = require("fabric").fabric;
 const Arrow = require('./components/arrow');
-const { SHAPE_TYPE } = require('./enums');
+const { SHAPE_TYPE, SHAPE_TYPE_KEY_NAME } = require('./enums');
+const { History, HistoryType } = require('./screenshot-editor-history');
+const { extendFaricObjectProperty } = require('./utils');
 
 // 截屏底图
 const J_Background = document.querySelector('#J_Background')
@@ -13,9 +15,30 @@ const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas')
 const J_ToolbarItemIcons = document.querySelectorAll('.J_ToolbarItemIcon')
 const J_ToolbarItemSettings = document.querySelectorAll('.J_ToolbarItemSettings')
 const J_SelectionUndo = document.querySelector('#J_SelectionUndo')
-// 选区画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时隐藏初始画布
+// 编辑画布: 固定绘制区域, 当且仅当选择绘制工具后出现, 同时隐藏初始画布
 const J_SelectionEditorWrapper = document.querySelector('#J_SelectionEditorWrapper')
 const J_SelectionEditor = document.querySelector('#J_SelectionEditor')
+
+// 马赛克滤镜
+const bgPixelateFilter = new fabric.Image.filters.Pixelate({
+  blocksize: 12,
+});
+// 马赛克背景图
+let mosaicBg = null;
+// 正常背景图
+let normalBg = null;
+// 设置默认所有图形不可被擦除
+fabric.Object.prototype.erasable = false;
+
+// 鼠标当前是否在空白处
+function isOnBlank(e) {
+  return !e?.target
+}
+
+// 是否是空白画布 (实际剩余一个不可选中的背景图对象)
+function isCanvasBlank(history) {
+  return history.state.length <= 1
+}
 
 // 工具设置位置调整
 function updateToolbarSettingsPosition(settings) {
@@ -61,10 +84,8 @@ function updateToolbarSettingsPosition(settings) {
 }
 
 // 更新撤销工具图标样式
-function updateToolbarUndoStatus (canvas) {
-  const allObjects = canvas.getObjects()
-
-  if (!allObjects.length) {
+function updateToolbarUndoStatus (history) {
+  if (isCanvasBlank(history)) {
     J_SelectionUndo.classList.add('disabled')
   } else {
     J_SelectionUndo.classList.remove('disabled')
@@ -74,8 +95,6 @@ function updateToolbarUndoStatus (canvas) {
 // 设置当前绘制工具框
 const setDrawingTool = (icon, settings, { setType, show, getCanvas }, type, discardActiveObject = false) => {
   const canvas = getCanvas()
-  // 隐藏原始截屏选区
-  J_SelectionCanvas.style.display = 'none'
   // 高亮当前工具图标
   J_ToolbarItemIcons.forEach(icon => icon.classList.remove('active'))
   icon.classList.add('active')
@@ -103,6 +122,10 @@ const captureEditorAdvance = ({
 } = {}) => {
   // 画布实例
   let canvas = null;
+  // 历史操作对象
+  let history = null;
+  // 编辑器是否已显示
+  let isShown = false;
 
   // 绘制类型
   let drawingType = null;
@@ -137,6 +160,9 @@ const captureEditorAdvance = ({
       stroke: 'red',
       strokeWidth: 2,
     },
+    [SHAPE_TYPE.MOSAIC]: {
+      strokeWidth: 8,
+    },
     [SHAPE_TYPE.TEXT]: {
       color: 'red',
       // 尺寸: 24, 30, 36
@@ -168,18 +194,22 @@ const captureEditorAdvance = ({
     const newConfig = Object.assign(drawingConfig[type], config);
     // 更新画笔默认配置
     if (type === SHAPE_TYPE.BRUSH) {
-      canvas.freeDrawingBrush.color = newConfig.stroke;
-      canvas.freeDrawingBrush.width = newConfig.strokeWidth;
+      fabric.PencilBrush.prototype.color = newConfig.stroke;
+      fabric.PencilBrush.prototype.width = newConfig.strokeWidth;
+    }
+    // 更新马赛克默认配置
+    if (type === SHAPE_TYPE.MOSAIC) {
+      fabric.EraserBrush.prototype.width = newConfig.strokeWidth;
     }
 
-    // console.log('最新默认配置', type, drawingConfig[type]);
+    console.log('最新默认配置', type, drawingConfig[type]);
 
     // 若是箭头工具, 则分别设置头部, 中线, 尾部配置
     if (type === SHAPE_TYPE.ARROW) {
       const arrowPart = canvas.getActiveObject();
       // 若存在选中箭头, 则更新箭头配置
       if (arrowPart) {
-        const [arrowHead, arrowLine, arrowTail] = Arrow.getArrowGroup(arrowPart);
+        const [arrowHead, arrowLine, arrowTail] = Arrow.getArrowGroup(arrowPart, canvas);
 
         const arrowConfig = getTypeConfig(SHAPE_TYPE.ARROW);
         const { 
@@ -228,9 +258,25 @@ const captureEditorAdvance = ({
   const getTypeConfig = (type) => drawingConfig[type]
 
   // 显示/隐藏画布
-  const show = () => {
+  const show = async () => {
+    // 若已显示, 则不进行重复操作
+    if (isShown) {
+      return
+    }
+
+    // 更新编辑截屏
+    await updateCanvas()
+
+    // 禁用初始画布操作, 显示编辑画布
+    isShown = true
     capture.disable()
+    // 隐藏原始截屏选区 (编辑截屏生成后再隐藏原始截屏, 防止画面闪烁)
+    J_SelectionCanvas.style.display = 'none'
+    // 显示编辑画布
     J_SelectionEditorWrapper.style.display = 'block'
+
+    // 添加编辑画布初始化历史记录
+    history.push(HistoryType.Add)
   }
   const hide = () => {
     capture.enable()
@@ -244,13 +290,10 @@ const captureEditorAdvance = ({
       w = 0, h = 0,
     } = capture.selectRect || {}
     
-    // 选区编辑画布背景图
-    const canvasImage = new fabric.Image(J_Background)
     // 选区编辑画布
     const fabricCanvas = new fabric.Canvas(J_SelectionEditor, {
       width: w,
       height: h,
-      backgroundImage: canvasImage,
       enableRetinaScaling: true,
       // 仅允许选中描边
       // https://github.com/fabricjs/fabric.js/issues/6146
@@ -261,14 +304,19 @@ const captureEditorAdvance = ({
       uniformScaling: false,
       // 禁用鼠标框选
       selection: false,
+      includeDefaultValues: true,
     });
 
-    // 更新画布
+    // 初始化画布
     canvas = fabricCanvas
+    // 初始化历史
+    history = new History(canvas)
 
     // 初始化画笔模式配置
-    canvas.freeDrawingBrush.color = drawingConfig[SHAPE_TYPE.BRUSH].stroke;
-    canvas.freeDrawingBrush.width = drawingConfig[SHAPE_TYPE.BRUSH].strokeWidth;
+    fabric.PencilBrush.prototype.color = drawingConfig[SHAPE_TYPE.BRUSH].stroke
+    fabric.PencilBrush.prototype.width = drawingConfig[SHAPE_TYPE.BRUSH].strokeWidth
+    // 初始化马赛克模式配置
+    fabric.EraserBrush.prototype.width = drawingConfig[SHAPE_TYPE.MOSAIC].strokeWidth
 
     // 绑定画布事件
     bindEvents()
@@ -281,24 +329,60 @@ const captureEditorAdvance = ({
   const updateCanvas = () => {
     const {
       w, h, x, y, r, b,
-    } = capture.selectRect
-
-    const canvasImage = new fabric.Image(J_Background, {
-      cropX: x * scaleFactor,
-      cropY: y * scaleFactor,
-      width: w * scaleFactor,
-      height: h * scaleFactor,
-      scaleX: 1 / scaleFactor,
-      scaleY: 1 / scaleFactor,
-    })
-    // 更新画布尺寸
-    canvas.setWidth(w)
-    canvas.setHeight(h)
-    canvas.setBackgroundImage(canvasImage)
+    } = capture.selectRect;
+    const captureImage = capture.getImageUrl()
 
     // 更新画布位置
     J_SelectionEditorWrapper.style.left = `${x}px`
     J_SelectionEditorWrapper.style.top = `${y}px`
+    // 更新画布背景图, 防止撤销操作时由于重新绘制编辑画布, 而产生的背景图闪烁
+    J_SelectionEditorWrapper.style.backgroundImage = `url(${captureImage})`
+
+    return new Promise((resolve) => {
+      // 创建背景图
+      new fabric.Image.fromURL(
+        captureImage,
+        (imgObj) => {
+          mosaicBg = fabric.util.object.clone(imgObj)
+          
+          // 为马赛克背景图添加马赛克滤镜
+          mosaicBg.filters.push(bgPixelateFilter)
+          mosaicBg.applyFilters()
+  
+          // 设置马赛克背景图
+          canvas.setWidth(w)
+          canvas.setHeight(h)
+          canvas.setBackgroundImage(mosaicBg)
+
+          // // 避免重复添加正常背景图
+          // if (normalBg) {
+          //   canvas.remove(normalBg)
+          // }
+          normalBg = fabric.util.object.clone(imgObj)
+          extendFaricObjectProperty(normalBg, ['__TYPE__'])
+          normalBg.__TYPE__ = SHAPE_TYPE_KEY_NAME.BACKGROUND_NORMAL
+          // HACK: 若不应用空过滤器, 会导致正常背景也会被应用马赛克滤镜
+          normalBg.filters = []
+          normalBg.applyFilters()
+          normalBg.set({
+            evented: false,
+            selectable: false,
+            hoverCursor: 'default'
+          })
+  
+          // 设置正常背景图
+          canvas.add(normalBg)
+
+          resolve()
+        },
+        {
+          scaleX: 1 / scaleFactor,
+          scaleY: 1 / scaleFactor,
+        }
+      )
+
+    })
+    
   }
 
   // 销毁画布
@@ -308,30 +392,38 @@ const captureEditorAdvance = ({
 
   // 撤销到上一步
   const undoCanvas = () => {
-    // console.log('before undo', canvas.getObjects());
-    const allObjects = canvas.getObjects();
-    if (!allObjects.length) {
-      return;
-    }
+    history.pop(() => {
+      updateToolbarUndoStatus(history);
+      // 上一步状态
+      const prevState = history.state[history.state.length - 1]
 
-    const lastObj = canvas.getObjects().pop();
+      canvas.loadFromJSON(
+        prevState.object,
+        () => {
+          // 恢复成功回调
+        },
+        /**
+         * NOTE: 从 JSON 恢复的对象, 需要重新为其绑定事件
+         * @see {@link https://stackoverflow.com/questions/49697408/fabricjs-preserve-events-on-saving-getting-canvas-from-json}
+         * 
+         * @param {object} json   json 配置
+         * @param {object} object 形状实例对象
+         */
+        (json, object) => {
+          // 重新赋值正常背景图
+          if (object.__TYPE__ === SHAPE_TYPE_KEY_NAME.BACKGROUND_NORMAL) {
+            normalBg = object;
+          }
+          // 重新绑定箭头形状事件
+          else if (object.__TYPE__ === SHAPE_TYPE_KEY_NAME.ARROW) {
+            Arrow.bindEvents(object, canvas);
+          }
 
-    // 移除箭头组合形状
-    if (lastObj.__TYPE__ === 'ARROW') {
-      const [arrowHead, arrowLine, arrowTail] = Arrow.getArrowGroup(lastObj);
-      canvas.remove(arrowHead);
-      canvas.remove(arrowLine);
-      canvas.remove(arrowTail);
-    }
-    // 移除其他单个形状
-    else {
-      canvas.remove(lastObj);
-    }
+        }
+      )
+      
+    })
 
-    updateToolbarUndoStatus(canvas);
-    
-    canvas.renderAll();
-    // console.log('after undo', canvas.getObjects());
   }
 
   // 清空画布
@@ -351,7 +443,10 @@ const captureEditorAdvance = ({
   // 事件绑定
   function bindEvents () {
     canvas.on('selection:created', onSelectionCreated)
+    canvas.on('object:added', onObjectAdded)
     canvas.on('object:modified', onObjectModified)
+    canvas.on('object:removed', onObjectRemoved)
+    canvas.on('path:created', onPathCreated)
     canvas.on('mouse:down:before', onMouseDownBefore)
     canvas.on('mouse:down', onMouseDown)
     canvas.on('mouse:move', onMouseMove)
@@ -361,7 +456,10 @@ const captureEditorAdvance = ({
   // 事件解绑
   function unbindEvents () {
     canvas.off('selection:created', onSelectionCreated)
+    canvas.off('object:added', onObjectAdded)
     canvas.off('object:modified', onObjectModified)
+    canvas.off('object:removed', onObjectRemoved)
+    canvas.off('path:created', onPathCreated)
     canvas.off('mouse:down:before', onMouseDownBefore)
     canvas.off('mouse:down', onMouseDown)
     canvas.off('mouse:move', onMouseMove)
@@ -379,10 +477,26 @@ const captureEditorAdvance = ({
     }
   }
 
+  // 对象添加事件
+  function onObjectAdded (e) {
+    console.log('onObjectAdded', e.target);
+  }
+
   // 对象修改事件
   function onObjectModified (e) {
-    // console.log('onObjectModified');
+    console.log('onObjectModified', e.target);
+    history.push(HistoryType.Modify, e.target);
     e.target.moveTo(++zIndex);
+  }
+
+  // 对象移除事件
+  function onObjectRemoved (e) {
+    console.log('onObjectRemoved', e.target);
+  }
+
+  // 路径创建事件
+  function onPathCreated (e) {
+    console.log('onPathCreated', e.path);
   }
 
   // 鼠标按下前事件: 用于处理形状创建前逻辑
@@ -392,17 +506,35 @@ const captureEditorAdvance = ({
     // 画笔工具
     if (drawingType === SHAPE_TYPE.BRUSH) {
       // 若点击在图形上, 则关闭画笔
-      if (e.target) {
+      if (!isOnBlank(e)) {
         canvas.isDrawingMode = false;
       }
       // 否则, 则开启画笔
       else {
+        canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
         canvas.isDrawingMode = true;
       }
     }
+
+    // 马赛克工具
+    if (drawingType === SHAPE_TYPE.MOSAIC) {
+      // 若点击在图形上, 则关闭马赛克
+      if (!isOnBlank(e)) {
+        normalBg.set('erasable', false);
+        canvas.isDrawingMode = false;
+      }
+      // 否则, 则开启马赛克
+      else {
+        canvas.freeDrawingBrush = new fabric.EraserBrush(canvas);
+        normalBg.set('erasable', true);
+        canvas.isDrawingMode = true;
+      }
+    }
+
+    // 文本工具
     if (drawingType === SHAPE_TYPE.TEXT) {
       // 创建文本前, 判断当前是否有文本对象处于编辑状态, 从而决定是否新创建文本
-      if (!e.target) {
+      if (isOnBlank(e)) {
         canvas.getObjects('i-text').some(itext => {
           // console.log('itext.isEditing', itext.isEditing);
           if (itext.isEditing) {
@@ -422,7 +554,7 @@ const captureEditorAdvance = ({
     isMouseDown = true;
     
     // 若点击在图形上, 则解绑鼠标移动事件, 避免影响当前图形的默认行为
-    if (e.target) {
+    if (!isOnBlank(e)) {
       canvas.off('mouse:move', onMouseMove);
     }
     // 若点击在空白处, 则绑定鼠标移动事件
@@ -462,7 +594,8 @@ const captureEditorAdvance = ({
       padding: 8,
     };
     const textObj = new fabric.IText('', objOpts);
-    textObj.__TYPE__ = 'TEXT';
+    extendFaricObjectProperty(textObj, ['__TYPE__']);
+    textObj.__TYPE__ = SHAPE_TYPE_KEY_NAME.TEXT;
     // 退出编辑模式时, 若文本为空, 则移除该文本
     textObj.on('editing:exited', () => {
       if (!textObj.text.trim()) {
@@ -509,7 +642,8 @@ const captureEditorAdvance = ({
           ...drawingConfig[SHAPE_TYPE.RECT],
         };
         obj = new objAPI(objOpts);
-        obj.__TYPE__ = 'RECT';
+        extendFaricObjectProperty(obj, ['__TYPE__']);
+        obj.__TYPE__ = SHAPE_TYPE_KEY_NAME.RECT;
         canvas.add(obj);
         canvas.setActiveObject(obj, e);
       }
@@ -521,7 +655,8 @@ const captureEditorAdvance = ({
           ...drawingConfig[SHAPE_TYPE.ELLIPSE],
         };
         obj = new objAPI(objOpts);
-        obj.__TYPE__ = 'ELLIPSE';
+        extendFaricObjectProperty(obj, ['__TYPE__']);
+        obj.__TYPE__ = SHAPE_TYPE_KEY_NAME.ELLIPSE;
         canvas.add(obj);
         canvas.setActiveObject(obj, e);
       }
@@ -533,9 +668,6 @@ const captureEditorAdvance = ({
           config: drawingConfig[SHAPE_TYPE.ARROW],
         }
         obj = new Arrow(objOpts);
-        obj.arrowLine.__TYPE__ = 'ARROW';
-        obj.arrowTail.__TYPE__ = 'ARROW';
-        obj.arrowHead.__TYPE__ = 'ARROW';
         canvas.add(obj.arrowLine, obj.arrowTail, obj.arrowHead);
         canvas.setActiveObject(obj.arrowHead, e);
       }
@@ -585,9 +717,7 @@ const captureEditorAdvance = ({
     }
     // 更新箭头
     else if (drawingType === SHAPE_TYPE.ARROW) {
-      const arrowHead = obj;
-      const arrowLine = obj.arrowLine;
-      const arrowTail = obj.arrowTail;
+      const [arrowHead, arrowLine, arrowTail] = Arrow.getArrowGroup(obj, canvas);
       
       // 中线端点坐标
       const x1 = originX;
@@ -630,110 +760,6 @@ const captureEditorAdvance = ({
       arrowLine.setCoords();
       arrowTail.setCoords();
     }
-    // 绘制马赛克
-    else if (drawingType === SHAPE_TYPE.MOSAIC) {
-      const ctx = canvas.getContext()
-      // const ctx = J_SelectionEditor.getContext('2d')
-      const mosaicImageData = getMosaicImageData({
-        imageData: ctx.getImageData(0, 0, canvas.width * scaleFactor, canvas.height * scaleFactor),
-        // 矫正画布缩放导致的坐标位移: (x0, y0) 处实际上获取到的是 (x0 * scaleFactor, y0 * scaleFactor) 位置处的像素
-        x0: pointer.x * scaleFactor,
-        y0: pointer.y * scaleFactor,
-        blocksize: 5 * scaleFactor,
-        radius: 10 * scaleFactor, // 半径为10, 则直径上有10*2/5=4个像素块
-      });
-      
-      // const backgroundImage = canvas.backgroundImage;
-      // console.log(backgroundImage);
-
-      const canvas2 = document.getElementById('J_SelectionCanvas2')
-      canvas2.width = canvas.width * scaleFactor
-      canvas2.height = canvas.height * scaleFactor
-      canvas2.style.width = `${canvas.width}px`
-      canvas2.style.height = `${canvas.height}px`
-      const cctx = canvas2.getContext('2d')
-      
-      cctx.putImageData(mosaicImageData, 0, 0)
-
-      // J_SelectionEditor.getContext('2d').putImageData(mosaicImageData, 0, 0)
-
-      /**
-       * 获取坐标处半径内马赛克图像像素数据
-       * 
-       * @param {object}  options 
-       * @param {array}   options.imageData   画布像素数据
-       * @param {number}  options.x0          圆心 x 轴坐标
-       * @param {number}  options.y0          圆心 y 轴坐标
-       * @param {number}  options.blocksize   马赛克块大小
-       * @param {number}  options.radius      马赛克画笔半径
-       * 
-       * @returns {array} 马赛克像素数据
-       */
-      function getMosaicImageData({ imageData, x0, y0, blocksize = 10 * scaleFactor, radius = 20 * scaleFactor } = {}) {
-        const { data, width, height } = imageData;
-        const xStart = x0 - radius > 0 ? x0 - radius : 0;
-        const xEnd = x0 + radius < width ? x0 + radius : width;
-        const yStart = y0 - radius > 0 ? y0 - radius : 0;
-        const yEnd = y0 + radius < height ? y0 + radius : height;
-
-        let index, i, j, r, g, b, a, _i, _j, _iLen, _jLen;
-        // 高: y轴像素
-        for (i = yStart; i < yEnd; i += blocksize) {
-          // 宽: x轴像素
-          for (j = xStart; j < xEnd; j += blocksize) {
-            // 若像素点不在圆内, 则不绘制马赛克
-            if (!isInCircle({
-              x: j, y: i, x0, y0, radius
-            })) {
-              continue;
-            }
-              
-            // 获取像素点数据
-            index = (i * 4) * width + (j * 4);
-            r = data[index];
-            g = data[index + 1];
-            b = data[index + 2];
-            a = data[index + 3];
-
-            // 获取马赛克块右下角坐标
-            _iLen = Math.min(i + blocksize, yEnd); // y轴最大值
-            _jLen = Math.min(j + blocksize, xEnd); // x轴最大值
-
-            // 设置马赛克块像素数据
-            for (_i = i; _i < _iLen; _i++) {
-              for (_j = j; _j < _jLen; _j++) {
-                index = (_i * 4) * width + (_j * 4);
-                data[index] = r;
-                data[index + 1] = g;
-                data[index + 2] = b;
-                data[index + 3] = a;
-              }
-            }
-          }
-        }
-
-        return imageData;
-      }
-      
-      // 坐标是否在圆内
-      function isInCircle({ x, y, x0, y0, radius } = {}) {
-        return Math.pow(x - x0, 2) + Math.pow(y - y0, 2) <= Math.pow(radius, 2)
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
     
     obj?.setCoords();
     canvas.renderAll();
@@ -751,20 +777,23 @@ const captureEditorAdvance = ({
     // 若为绘制结束阶段, 则释放绘制对象选中状态
     if (isDrawingCreated) {
       canvas.discardActiveObject(e);
+      // 更新历史状态 (拖拽绘制的图形需要在该阶段更新, 否则获取不到最新属性, 如宽高等)
+      history.push(HistoryType.Add, e.target);
     }
 
     // 若当前激活对象为箭头中线, 则转而激活关联的箭头头部, 使其层级恢复至箭头头部和尾部之下, 
     // 避免头部和尾部部分被遮蔽, 影响拖动交互
     if (activeObj?.arrowPart === 'arrowLine') {
-      canvas.setActiveObject(activeObj.arrowHead);
+      const [arrowHead] = Arrow.getArrowGroup(activeObj, canvas);
+      canvas.setActiveObject(arrowHead);
     }
 
     // 根据当前绘制对象, 显示对应的配置工具框
     // 若是画笔
     if (activeObj?.type === 'path') {
       setDrawingTool(
-        document.querySelector(`[data-icon="BRUSH"]`),
-        document.querySelector(`[data-type="BRUSH"]`),
+        document.querySelector(`[data-icon="${SHAPE_TYPE_KEY_NAME.BRUSH}"]`),
+        document.querySelector(`[data-type="${SHAPE_TYPE_KEY_NAME.BRUSH}"]`),
         { setType, show, getCanvas },
         SHAPE_TYPE.BRUSH
       );
@@ -780,12 +809,14 @@ const captureEditorAdvance = ({
     }
 
     // 当前选中对象层级递增
-    e.target?.moveTo(++zIndex);
+    if (!isOnBlank(e)) {
+      e.target?.moveTo(++zIndex);
+    }
     
     isMouseDown = false;
     isDrawingCreated = false;
 
-    updateToolbarUndoStatus(canvas);
+    updateToolbarUndoStatus(history);
     
     canvas.isDrawingMode = false;
     canvas.renderAll();
