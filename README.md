@@ -4,29 +4,10 @@
 
 ![demo](./src/assets/image/demo.png)
 
-# Runtime Environment
-
-```
-# Electron   13.1.7
-# Node       14.16.0
-# Chromium   91.0.4472.124
-```
-
-# Build Environment
-```
-# electron-builder  21.2.0
-```
-
-> 降级为固定版本 21.2.0 是因为在 Mac OS 下可能无法构建 ia32 架构, 错误信息: exited with code ERR_ELECTRON_BUILDER_CANNOT_EXECUTE.
-> 
-> 若不需要在 Mac OS 下构建 Windows 应用, 则可使用最新版本.
-
-参考资料: https://github.com/electron-userland/electron-builder/issues/4629
-
 # Usage
 
 ```bash
-# 1. 安装依赖
+# 1. 安装依赖: 此时 electron-builder 会自动构建 node-canvas 原生模块
 npm i
 
 # 2. fabric 自定义构建: 新增 erasing 模块 (执行命令前需全局安装 uglify-js)
@@ -40,14 +21,62 @@ npm run start
 # Build
 
 ```bash
-# 打包mac
+# 打包 mac
 npm run dist:mac
 
-# 打包win
+# 打包 win
 npm run dist:win
 ```
 
 构建前请先看[这里](https://zhuanlan.zhihu.com/p/110448415), 解决构建源下载超时的问题.
+
+# Windows 下可能遇到的问题
+
+Windows 下进行 node-canvas 原生模块构建时, 由于 Node, Electron 版本的不同, 可能会导致很多棘手的问题, 这些问题多是涉及到 c++ 和 v8, 因而对于前端开发者而言, 很难定位和解决.
+
+若还不知道如何搭建 node-canvas 原生模块构建环境, 请参考[这里](http://jsoon.fun/front-end/views/blog-electron-node-canvas/index.html).
+
+## ['toupper': is not a member of 'std'](https://github.com/Automattic/node-canvas/issues/1848)
+
+解决方案如下, 修改 `node_modules/canvas/src/util.h` 代码:
+
+```h
+// Line 31
+return c1 == c2 || std::toupper(c1) == std::toupper(c2);
+```
+
+修改为:
+
+```h
+// std:: -> ::
+return c1 == c2 || ::toupper(c1) == ::toupper(c2);
+```
+
+## [Canvas.obj : error LNK2001: unresolved external symbol "__declspec\(dllimport\) public: class std::shared_ptr\<class v8::BackingStore\> __cdecl v8::ArrayBuffer::GetBackingStore\(void\)](https://github.com/nodejs/nan/issues/892)
+
+解决方案如下, 修改 `node_modules/nan/nan_typedarray_contents.h` 代码:
+
+```h
+// Line 36 - 40
+#if (V8_MAJOR_VERSION >= 8)
+  data = static_cast<char*>(buffer->GetBackingStore()->Data()) + byte_offset;
+#else
+  data = static_cast<char*>(buffer->GetContents().Data()) + byte_offset;
+#endif
+```
+
+修改为:
+
+```h
+// 去掉判断
+data = static_cast<char*>(buffer->GetContents().Data()) + byte_offset;
+```
+
+## 其他相关问题链接
+
+[Electron-rebuild canvas 2.6.1 fails on Windows 10: Canvas.obj : error LNK2001: unresolved external symbol](https://github.com/Automattic/node-canvas/issues/1589)
+
+[[Bug]: Link error for native c++ modules](https://github.com/electron/electron/issues/29893)
 
 # Features
 
@@ -68,4 +97,5 @@ npm run dist:win
 
 - [ ] [截图图片鼠标无法隐藏](https://github.com/electron/electron/issues/7584)
 - [x] ~~[Mac-10.13.6] 截屏窗口打开后, 由于是simpleFullscreen状态, 系统菜单栏会被隐藏, 退出截屏后仍然处于隐藏状态~~ (已使用非全屏方式规避)
+- [x] [Mac 下构建 Windows 报错: exited with code ERR_ELECTRON_BUILDER_CANNOT_EXECUTE](https://github.com/electron-userland/electron-builder/issues/4629#issuecomment-591312152)
 - 其他兼容性问题待测试
