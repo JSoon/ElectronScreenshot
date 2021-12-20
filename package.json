@@ -6,10 +6,12 @@
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
+    "rebuild": "npx electron-rebuild",
     "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win",
     "lint": "npx eslint --cache --fix --ext .js src/",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "check": "npx electron check-version.js",
+    "postinstall": "electron-builder install-app-deps"
   },
   "repository": {
     "type": "git",
@@ -25,16 +27,15 @@
   },
   "homepage": "https://github.com/JSoon/ElectronScreenshot#readme",
   "engines": {
-    "node": "^14.18"
+    "node": "^14.18.0"
   },
   "dependencies": {
-    "fabric": "^4.6.0",
-    "lodash": "^4.17.21"
+    "fabric": "^4.6.0"
   },
   "devDependencies": {
-    "electron": "^13.1.7",
-    "electron-builder": "21.2.0",
-    "eslint": "^8.4.1"
+    "electron": "^12.2.3",
+    "electron-builder": "^22.14.5",
+    "eslint": "^8.5.0"
   },
   "build": {
     "appId": "com.electron.electronscreenshot",
