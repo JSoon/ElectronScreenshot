@@ -236,6 +236,8 @@ getScreenshot(async (imgSrc, startTime) => {
       return;
     }
 
+    await fabricCapture.show();
+
     // 优先获取工具编辑后的图片流, 若没有则获取原始截图数据
     const dataURL = fabricCapture.getCanvasDataURL();
     const blobURL = URL.createObjectURL(await (await fetch(dataURL)).blob());
@@ -397,6 +399,7 @@ getScreenshot(async (imgSrc, startTime) => {
 
   // 截屏下载
   J_SelectionDownload.addEventListener('click', async e => {
+    await fabricCapture.show();
     const dataURL = fabricCapture.getCanvasDataURL();
 
     // 保存截屏图片

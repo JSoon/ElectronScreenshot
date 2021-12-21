@@ -96,9 +96,13 @@ class Screenshot {
 
 /**
  * 使用截屏
- * @param {BrowserWindow} mainWindow 程序主窗口
+ * @param {BrowserWindow} mainWindow  程序主窗口
+ * @param {string}        prefix      截图文件名称前缀
  */
-const useCapture = (mainWindow) => {
+const useCapture = ({ 
+  mainWindow,
+  prefix,
+} = {}) => {
   if (!mainWindow) {
     return;
   }
@@ -183,7 +187,7 @@ const useCapture = (mainWindow) => {
             name: 'Images',
             extensions: ['png', 'jpg', 'gif'],
           }],
-          defaultPath: getFilename(),
+          defaultPath: getFilename(prefix),
         },
       );
 
