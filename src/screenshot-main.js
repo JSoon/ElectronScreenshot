@@ -56,10 +56,7 @@ class Screenshot {
 
       if (isMacOS) {
         win.setAlwaysOnTop(true, 'screen-saver');
-        win.setVisibleOnAllWorkspaces(true, {
-          visibleOnFullScreen: true,
-          skipTransformProcessType: true,
-        });
+        win.setVisibleOnAllWorkspaces(true);
         win.setFullScreenable(false);
       }
 
