@@ -29,7 +29,8 @@ class Screenshot {
     let displays = screen.getAllDisplays();
 
     screenshotWins = displays.map(display => {
-      // console.log('截屏开始', display.id);
+      console.log('截屏开始', display.id);
+
       const win = new BrowserWindow({
         // Windows 正常使用全屏模式; Mac 下全屏会切换屏幕, 导致失效, 故不设置全屏, 而采用窗口置顶
         fullscreen: isWindows,
@@ -76,11 +77,6 @@ class Screenshot {
       } else {
         win.blur();
       }
-
-      // 截屏结束前, 退出simpleFullscreen模式
-      win.on('close', () => {
-        win.setSimpleFullScreen(false);
-      });
 
       // 一个窗口关闭则关闭所有窗口
       win.on('closed', () => {

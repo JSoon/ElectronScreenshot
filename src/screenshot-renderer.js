@@ -7,6 +7,7 @@ const { IPC_CHANNELS, SHAPE_TYPE } = require('./enums');
 const { getScreenshot } = require('./desktop-capturer');
 const { ScreenshotEditor, EDITOR_EVENTS } = require('./screenshot-editor');
 const { captureEditorAdvance, setDrawingTool } = require('./screenshot-editor-advance');
+const registerShortcuts = require('./screenshot-shortcuts');
 
 // 截屏音
 const audio = new Audio();
@@ -41,6 +42,7 @@ const J_CursorInfo = document.querySelector('#J_CursorInfo');
 const J_CursorCoords = document.querySelector('#J_CursorCoords');
 const J_CursorColor = document.querySelector('#J_CursorColor');
 
+registerShortcuts();
 
 // 右键取消截屏
 document.body.addEventListener('mousedown', e => {

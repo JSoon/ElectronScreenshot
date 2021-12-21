@@ -35,7 +35,8 @@
   "devDependencies": {
     "electron": "^12.2.3",
     "electron-builder": "^22.14.5",
-    "eslint": "^8.5.0"
+    "eslint": "^8.5.0",
+    "eslint-plugin-html": "^6.2.0"
   },
   "build": {
     "appId": "com.electron.electronscreenshot",
