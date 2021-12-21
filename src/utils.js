@@ -4,7 +4,7 @@
 const fabric = require('fabric').fabric;
 
 // 生成截图文件名称
-const getFilename = () => {
+const getFilename = (prefix = 'screenshot') => {
   const d = new Date();
   const year = d.getFullYear().toString();
   let month = d.getMonth() + 1;
@@ -18,7 +18,7 @@ const getFilename = () => {
   let second = d.getSeconds();
   second = second < 10 ? `0${second}` : second.toString();
   
-  return `海螺截图_${year}${month}${day}_${hour}${minute}${second}`;
+  return `${prefix}_${year}${month}${day}_${hour}${minute}${second}`;
 };
 
 // 扩展 fabric 对象属性, 使其能够被序列化, 否则 obj.toObject() 中不会存在自定义属性

@@ -11,7 +11,7 @@
     "dist:win": "electron-builder --win",
     "lint": "npx eslint --cache --fix --ext .js src/",
     "check": "npx electron check-version.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "postinstall": "electron-builder install-app-deps"
   },
   "repository": {
     "type": "git",
@@ -27,17 +27,16 @@
   },
   "homepage": "https://github.com/JSoon/ElectronScreenshot#readme",
   "engines": {
-    "node": "^14.16.0"
+    "node": "^14.18.0"
   },
   "dependencies": {
-    "fabric": "^4.6.0",
-    "lodash": "^4.17.21"
+    "fabric": "^4.6.0"
   },
   "devDependencies": {
-    "electron": "^13.6.3",
-    "electron-builder": "21.2.0",
-    "electron-rebuild": "^3.2.5",
-    "eslint": "^8.4.1"
+    "electron": "^12.2.3",
+    "electron-builder": "^22.14.5",
+    "eslint": "^8.5.0",
+    "eslint-plugin-html": "^6.2.0"
   },
   "build": {
     "appId": "com.electron.electronscreenshot",

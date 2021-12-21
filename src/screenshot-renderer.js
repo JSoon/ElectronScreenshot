@@ -7,6 +7,7 @@ const { IPC_CHANNELS, SHAPE_TYPE } = require('./enums');
 const { getScreenshot } = require('./desktop-capturer');
 const { ScreenshotEditor, EDITOR_EVENTS } = require('./screenshot-editor');
 const { captureEditorAdvance, setDrawingTool } = require('./screenshot-editor-advance');
+const registerShortcuts = require('./screenshot-shortcuts');
 
 // 截屏音
 const audio = new Audio();
@@ -41,6 +42,7 @@ const J_CursorInfo = document.querySelector('#J_CursorInfo');
 const J_CursorCoords = document.querySelector('#J_CursorCoords');
 const J_CursorColor = document.querySelector('#J_CursorColor');
 
+registerShortcuts();
 
 // 右键取消截屏
 document.body.addEventListener('mousedown', e => {
@@ -234,6 +236,8 @@ getScreenshot(async (imgSrc, startTime) => {
       return;
     }
 
+    await fabricCapture.show();
+
     // 优先获取工具编辑后的图片流, 若没有则获取原始截图数据
     const dataURL = fabricCapture.getCanvasDataURL();
     const blobURL = URL.createObjectURL(await (await fetch(dataURL)).blob());
@@ -395,6 +399,7 @@ getScreenshot(async (imgSrc, startTime) => {
 
   // 截屏下载
   J_SelectionDownload.addEventListener('click', async e => {
+    await fabricCapture.show();
     const dataURL = fabricCapture.getCanvasDataURL();
 
     // 保存截屏图片

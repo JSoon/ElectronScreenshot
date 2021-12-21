@@ -29,7 +29,8 @@ class Screenshot {
     let displays = screen.getAllDisplays();
 
     screenshotWins = displays.map(display => {
-      // console.log('截屏开始', display.id);
+      console.log('截屏开始', display.id);
+
       const win = new BrowserWindow({
         // Windows 正常使用全屏模式; Mac 下全屏会切换屏幕, 导致失效, 故不设置全屏, 而采用窗口置顶
         fullscreen: isWindows,
@@ -55,10 +56,7 @@ class Screenshot {
 
       if (isMacOS) {
         win.setAlwaysOnTop(true, 'screen-saver');
-        win.setVisibleOnAllWorkspaces(true, {
-          visibleOnFullScreen: true,
-          skipTransformProcessType: true,
-        });
+        win.setVisibleOnAllWorkspaces(true);
         win.setFullScreenable(false);
       }
 
@@ -76,11 +74,6 @@ class Screenshot {
       } else {
         win.blur();
       }
-
-      // 截屏结束前, 退出simpleFullscreen模式
-      win.on('close', () => {
-        win.setSimpleFullScreen(false);
-      });
 
       // 一个窗口关闭则关闭所有窗口
       win.on('closed', () => {
@@ -103,9 +96,13 @@ class Screenshot {
 
 /**
  * 使用截屏
- * @param {BrowserWindow} mainWindow 程序主窗口
+ * @param {BrowserWindow} mainWindow  程序主窗口
+ * @param {string}        prefix      截图文件名称前缀
  */
-const useCapture = (mainWindow) => {
+const useCapture = ({ 
+  mainWindow,
+  prefix,
+} = {}) => {
   if (!mainWindow) {
     return;
   }
@@ -190,7 +187,7 @@ const useCapture = (mainWindow) => {
             name: 'Images',
             extensions: ['png', 'jpg', 'gif'],
           }],
-          defaultPath: getFilename(),
+          defaultPath: getFilename(prefix),
         },
       );
 
