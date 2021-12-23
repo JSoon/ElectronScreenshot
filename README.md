@@ -10,9 +10,10 @@
 # 1. 安装依赖: 此时 electron-builder 会自动构建 node-canvas 原生模块
 npm i
 
-# 2. fabric 自定义构建: 新增 erasing 模块 (执行命令前需全局安装 uglify-js)
+# 2. fabric 自定义构建: 新增 erasing 模块 (执行命令前需全局安装 uglify-js), 排除非必要的模块
 cd node_modules/fabric
-node build.js modules=ALL exclude=gestures
+# 排除非必要模块构建: 手势操作, Node 下运行 canvas
+node build.js modules=ALL exclude=gestures,node
 
 # 3. 运行
 npm run start

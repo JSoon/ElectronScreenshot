@@ -46,7 +46,7 @@
       "buildResources": "build",
       "output": "dist"
     },
-    "npmRebuild": true,
+    "npmRebuild": false,
     "mac": {
       "identity": null
     },
