@@ -33,7 +33,7 @@ npm run dist:win
 
 # Windows 下可能遇到的问题
 
-> 注: 若 canvas 不需要在 Node 环境下运行 (即 Electron 应用主线程), 则无需考虑构建 node-canvas 原生模块构建. 本项目 canvas 运行在渲染进程, 故无需进行原生模块构建.
+> ⚠️注: 若 canvas 不需要在 Node 环境下运行 (即 Electron 应用主线程), 则无需考虑构建 node-canvas 原生模块构建. 本项目 canvas 运行在渲染进程, 故无需进行原生模块构建.
 
 Windows 下进行 node-canvas 原生模块构建时, 由于 Node, Electron 版本的不同, 可能会导致很多棘手的问题, 这些问题多是涉及到 c++ 和 v8, 因而对于前端开发者而言, 很难定位和解决.
 
