@@ -15,7 +15,7 @@ cd node_modules/fabric
 # 排除非必要模块构建: 手势操作, 支持 Node 下运行 canvas
 node build.js modules=ALL exclude=gestures,node
 
-# 4. 运行
+# 3. 运行
 npm run start
 ```
 
