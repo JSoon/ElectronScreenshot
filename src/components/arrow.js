@@ -6,7 +6,7 @@
 
 const fabric = require('fabric').fabric;
 const { SHAPE_TYPE_KEY_NAME } = require('../enums');
-const { extendFaricObjectProperty } = require('../utils');
+const { extendFaricObjectProperty } = require('../utils-renderer');
 
 class Arrow {
   // 画布

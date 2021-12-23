@@ -12,7 +12,7 @@ const {
 } = require('electron');
 const { IPC_CHANNELS } = require('./enums');
 const { getCurrentWindow, getCurrentScreen, isMacOS, hideCurrentWindow, closeCurrentWindow, isWindows } = require('./utils-main');
-const { getFilename } = require('./utils');
+const { getFilename } = require('./utils-main');
 
 // 所有截屏窗口
 let screenshotWins = [];

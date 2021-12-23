@@ -5,7 +5,7 @@ const fabric = require('fabric').fabric;
 const Arrow = require('./components/arrow');
 const { SHAPE_TYPE, SHAPE_TYPE_KEY_NAME } = require('./enums');
 const { History, HistoryType } = require('./screenshot-editor-history');
-const { extendFaricObjectProperty } = require('./utils');
+const { extendFaricObjectProperty } = require('./utils-renderer');
 
 // 选区画布: 初始画布
 const J_SelectionCanvas = document.querySelector('#J_SelectionCanvas');

@@ -10,8 +10,7 @@
     "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win",
     "lint": "npx eslint --cache --fix --ext .js src/",
-    "check": "npx electron check-version.js",
-    "postinstall": "electron-builder install-app-deps"
+    "check": "npx electron check-version.js"
   },
   "repository": {
     "type": "git",
@@ -33,7 +32,7 @@
     "fabric": "^4.6.0"
   },
   "devDependencies": {
-    "electron": "^12.2.3",
+    "electron": "^13.1.7",
     "electron-builder": "^22.14.5",
     "eslint": "^8.5.0",
     "eslint-plugin-html": "^6.2.0"
@@ -46,7 +45,7 @@
       "buildResources": "build",
       "output": "dist"
     },
-    "npmRebuild": true,
+    "npmRebuild": false,
     "mac": {
       "identity": null
     },
