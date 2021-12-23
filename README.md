@@ -7,12 +7,12 @@
 # Usage
 
 ```bash
-# 1. 安装依赖: 此时 electron-builder 会自动构建 node-canvas 原生模块
+# 1. 安装依赖
 npm i
 
 # 2. fabric 自定义构建: 新增 erasing 模块 (执行命令前需全局安装 uglify-js), 排除非必要的模块
 cd node_modules/fabric
-# 排除非必要模块构建: 手势操作, Node 下运行 canvas
+# 排除非必要模块构建: 手势操作, 支持 Node 下运行 canvas
 node build.js modules=ALL exclude=gestures,node
 
 # 3. 运行
@@ -32,6 +32,8 @@ npm run dist:win
 构建前请先看[这里](https://zhuanlan.zhihu.com/p/110448415), 解决构建源下载超时的问题.
 
 # Windows 下可能遇到的问题
+
+> 注: 若 canvas 不需要在 Node 环境下运行 (即 Electron 应用主线程), 则无需考虑构建 node-canvas 原生模块构建. 本项目 canvas 运行在渲染进程, 故无需进行原生模块构建.
 
 Windows 下进行 node-canvas 原生模块构建时, 由于 Node, Electron 版本的不同, 可能会导致很多棘手的问题, 这些问题多是涉及到 c++ 和 v8, 因而对于前端开发者而言, 很难定位和解决.
 
