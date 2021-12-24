@@ -4,7 +4,7 @@
 
 ![demo](./src/assets/image/demo.png)
 
-<h2>目录</h2>
+<h2>Contents</h2>
 
 - [Usage](#usage)
 - [Build](#build)
