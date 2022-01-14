@@ -1,8 +1,12 @@
 {
-  "name": "electronscreenshot",
+  "name": "@financial-freedom/electron-screenshot",
   "version": "1.0.0",
-  "description": "基于ElectronJS的截屏软件",
-  "main": "main.js",
+  "description": "基于ElectronJS的截屏工具",
+  "keywords": [
+    "electron",
+    "screenshot"
+  ],
+  "main": "./src/screenshot-main.js",
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
@@ -10,16 +14,14 @@
     "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win",
     "lint": "npx eslint --cache --fix --ext .js src/",
-    "check": "npx electron check-version.js"
+    "check": "npx electron check-version.js",
+    "postinstall": "node ./script/postinstall.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/JSoon/ElectronScreenshot.git"
   },
-  "author": {
-    "name": "J.Soon",
-    "email": "serdeemail@gmail.com"
-  },
+  "author": "J.Soon <serdeemail@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/JSoon/ElectronScreenshot/issues"

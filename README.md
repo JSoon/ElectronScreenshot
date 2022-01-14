@@ -7,7 +7,11 @@
 <h2>Contents</h2>
 
 - [Usage](#usage)
-- [Build](#build)
+  - [Prerequisite](#prerequisite)
+  - [Install](#install)
+  - [Import](#import)
+- [Demo Run](#demo-run)
+- [Demo Build](#demo-build)
 - [Features](#features)
 - [Issues](#issues)
 - [Windows 下可能遇到的问题](#windows-下可能遇到的问题)
@@ -17,20 +21,48 @@
 
 ## Usage
 
+### Prerequisite
+
+全局安装 [uglify-js](https://www.npmjs.com/package/uglify-js) (若已安装, 可忽略该步骤).
+
 ```bash
-# 1. 安装依赖
-npm i
+npm i -g uglify-js
+```
 
-# 2. fabric 自定义构建: 新增 erasing 模块 (执行命令前需全局安装 uglify-js), 排除非必要的模块
-cd node_modules/fabric
-# 排除非必要模块构建: 手势操作, 支持 Node 下运行 canvas
-node build.js modules=ALL exclude=gestures,node
+### Install
 
-# 3. 运行
+```bash
+npm i @financial-freedom/electron-screenshot
+```
+
+### Import
+
+```js
+/**
+ * 主进程 main.js
+ */
+// 引入模块
+const { useCapture } = require('@jsoon/electron-screenshot');
+
+// 创建窗口
+const mainWindow = new BrowserWindow({
+  // Options
+  // ...
+});
+
+// 使用截屏
+useCapture({
+  mainWindow
+});
+```
+
+## Demo Run
+
+```bash
 npm run start
 ```
 
-## Build
+## Demo Build
 
 ```bash
 # 打包 mac
@@ -53,9 +85,9 @@ npm run dist:win
 - [x] 椭圆形框工具
 - [x] 箭头工具
 - [x] 画笔工具
-- [x] 马赛克工具 🤩
+- [x] 马赛克工具 :star_struck:
 - [x] 文字工具
-- [x] 撤销工具 🤩
+- [x] 撤销工具 :star_struck:
 
 ## Issues
 
@@ -66,7 +98,7 @@ npm run dist:win
 
 ## Windows 下可能遇到的问题
 
-> ⚠️注: 若 canvas 不需要在 Node 环境下运行 (即 Electron 应用主线程), 则无需考虑构建 node-canvas 原生模块构建. 本项目 canvas 运行在渲染进程, 故无需进行原生模块构建.
+> :warning: 若 canvas 不需要在 Node 环境下运行 (即 Electron 应用主线程), 则无需考虑构建 node-canvas 原生模块构建. 本项目 canvas 运行在渲染进程, 故无需进行原生模块构建.
 
 Windows 下进行 node-canvas 原生模块构建时, 由于 Node, Electron 版本的不同, 可能会导致很多棘手的问题, 这些问题多是涉及到 c++ 和 v8, 因而对于前端开发者而言, 很难定位和解决.
 
