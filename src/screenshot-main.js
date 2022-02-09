@@ -125,6 +125,8 @@ const useCapture = ({
   globalShortcut.register(SCREENSHOT_DEFAULT_SHORTCUT, screenShot.init);
   // 全局截屏快捷键注册
   ipcMain.handle(IPC_CHANNELS.SCREENSHOT_REGISTER_SHORTCUTS, (e, shortcut) => {
+    // 注册新快捷键前, 注销默认快捷键
+    globalShortcut.unregister(SCREENSHOT_DEFAULT_SHORTCUT, screenShot.init);
     return globalShortcut.register(shortcut, screenShot.init);
   });
   // 全局截屏快捷键移除

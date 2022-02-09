@@ -447,6 +447,7 @@ const captureEditorAdvance = ({
     canvas.on('mouse:down', onMouseDown);
     canvas.on('mouse:move', onMouseMove);
     canvas.on('mouse:up', onMouseUp);
+    registerCanvasEvents();
   }
 
   // 事件解绑
@@ -460,6 +461,36 @@ const captureEditorAdvance = ({
     canvas.off('mouse:down', onMouseDown);
     canvas.off('mouse:move', onMouseMove);
     canvas.off('mouse:up', onMouseUp);
+  }
+
+  // 注册画布快捷键
+  function registerCanvasEvents() {
+    document.addEventListener('keydown', e => {
+      // ctrl+Z/command+Z 撤销操作
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+        undoCanvas();
+      }
+  
+      // 删除选中对象
+      if (e.code === 'Delete') {
+        const activeObj = canvas.getActiveObject();
+        if (!activeObj) {
+          return;
+        }
+        
+        // 删除箭头组对象
+        if (activeObj.__TYPE__ === SHAPE_TYPE_KEY_NAME.ARROW) {
+          const [arrowHead, arrowLine, arrowTail] = Arrow.getArrowGroup(activeObj, canvas);
+          canvas.remove(arrowHead);
+          canvas.remove(arrowLine);
+          canvas.remove(arrowTail);
+        }
+        // 删除单个对象
+        else {
+          canvas.remove(activeObj);
+        }
+      }
+    });
   }
 
   // 选区创建事件

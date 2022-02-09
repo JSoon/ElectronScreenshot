@@ -8,7 +8,7 @@
   ],
   "main": "./src/screenshot-main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "electron ./main.js",
     "pack": "electron-builder --dir",
     "rebuild": "npx electron-rebuild",
     "dist:mac": "electron-builder --mac",
